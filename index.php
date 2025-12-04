@@ -840,7 +840,7 @@ function cargarPersonasContacto(clienteId) {
 
 function cargarPersonasResponsable(clienteId, seleccionarId = null) {
     $.ajax({
-        url: 'ajax/obtener_personas_responsable.php',
+        url: 'ajax/obtener_persona_responsable.php',
         method: 'POST',
         data: { id_cliente: clienteId },
         dataType: 'json',
