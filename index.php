@@ -467,7 +467,7 @@ $(document).ready(function() {
         width: '100%',
         dropdownParent: $(document.body),
         ajax: {
-            url: 'remisiones/ajax/buscar_clientes.php',
+            url: 'ajax/buscar_clientes.php',
             dataType: 'json',
             delay: 250,
             data: function (params) {
@@ -543,7 +543,7 @@ $(document).ready(function() {
         formData.append('items', JSON.stringify(items));
 
         $.ajax({
-            url: 'remisiones/ajax/crear_remision.php',
+            url: 'ajax/crear_remision.php',
             method: 'POST',
             data: formData,
             processData: false,
@@ -565,7 +565,7 @@ $(document).ready(function() {
                         buttonsStyling: false
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.open(`remisiones/generar_pdf.php?id=${response.id_remision}`, '_blank');
+                            window.open(`generar_pdf.php?id=${response.id_remision}`, '_blank');
                         }
                         limpiarFormulario();
                         cargarSiguienteNumero();
@@ -586,7 +586,7 @@ $(document).ready(function() {
         e.preventDefault();
 
         $.ajax({
-            url: 'remisiones/ajax/crear_cliente.php',
+            url: 'ajax/crear_cliente.php',
             method: 'POST',
             data: $(this).serialize(),
             dataType: 'json',
@@ -619,7 +619,7 @@ $(document).ready(function() {
         e.preventDefault();
 
         $.ajax({
-            url: 'remisiones/ajax/crear_persona_contacto.php',
+            url: 'ajax/crear_persona_contacto.php',
             method: 'POST',
             data: $(this).serialize(),
             dataType: 'json',
@@ -652,10 +652,17 @@ $(document).ready(function() {
             return;
         }
 
+        const data = {
+            id_cliente: $('#cliente_persona_responsable').val(),
+            nombre_responsable: $('#nombre_persona_responsable').val(),
+            correo: $('#correo_persona_responsable').val(),
+            telefono: $('#telefono_persona_responsable').val()
+        };
+
         $.ajax({
-            url: 'remisiones/ajax/crear_persona_responsable.php',
+            url: 'ajax/crear_persona_responsable.php',
             method: 'POST',
-            data: $(this).serialize(),
+            data: data,
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
@@ -749,7 +756,7 @@ function agregarItem() {
         width: '100%',
         dropdownParent: $(document.body),
         ajax: {
-            url: 'remisiones/ajax/buscar_productos.php',
+            url: 'ajax/buscar_productos.php',
             dataType: 'json',
             delay: 250,
             data: params => ({ termino: params.term }),
@@ -820,7 +827,7 @@ function limpiarFormulario() {
 
 function cargarPersonasContacto(clienteId) {
     $.ajax({
-        url: 'remisiones/ajax/obtener_personas_contacto.php',
+        url: 'ajax/obtener_personas_contacto.php',
         method: 'POST',
         data: { id_cliente: clienteId },
         dataType: 'json',
@@ -840,7 +847,7 @@ function cargarPersonasContacto(clienteId) {
 
 function cargarPersonasResponsable(clienteId, seleccionarId = null) {
     $.ajax({
-        url: 'remisiones/ajax/obtener_personas_responsable.php',
+        url: 'ajax/obtener_persona_responsable.php',
         method: 'POST',
         data: { id_cliente: clienteId },
         dataType: 'json',
@@ -869,7 +876,7 @@ function cargarPersonasResponsable(clienteId, seleccionarId = null) {
 
 function cargarSiguienteNumero() {
     $.ajax({
-        url: 'remisiones/ajax/obtener_siguiente_numero.php',
+        url: 'ajax/obtener_siguiente_numero.php',
         method: 'GET',
         dataType: 'json',
         success: function(response) {
