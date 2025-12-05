@@ -652,10 +652,17 @@ $(document).ready(function() {
             return;
         }
 
+        const data = {
+            id_cliente: $('#cliente_persona_responsable').val(),
+            nombre_responsable: $('#nombre_persona_responsable').val(),
+            correo: $('#correo_persona_responsable').val(),
+            telefono: $('#telefono_persona_responsable').val()
+        };
+
         $.ajax({
             url: 'ajax/crear_persona_responsable.php',
             method: 'POST',
-            data: $(this).serialize(),
+            data: data,
             dataType: 'json',
             success: function(response) {
                 if (response.success) {

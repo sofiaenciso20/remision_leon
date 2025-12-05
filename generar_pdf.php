@@ -111,7 +111,7 @@ class RemisionPDF extends FPDF {
         }
 
         // RESPONSABLE (ARRIBA DEL PDF)
-        if (!empty($this->datos['nombre_responsable'])) {
+        if (isset($this->datos['nombre_responsable']) && !empty($this->datos['nombre_responsable'])) {
             $this->SetX($x+3);
             $this->SetFont('Arial','B',9);
             $this->Cell(28,4,'RESPONSABLE: ',0,0);
@@ -152,7 +152,7 @@ class RemisionPDF extends FPDF {
         $this->Cell($tercio-5,4,'Responsable',0,1,'C');
 
         // Nombre del responsable debajo de la firma
-        if (!empty($this->datos['nombre_responsable'])) {
+        if (isset($this->datos['nombre_responsable']) && !empty($this->datos['nombre_responsable'])) {
             $this->SetX(10+($tercio*2));
             $this->SetFont('Arial','',7);
             $this->Cell($tercio-5,4,
