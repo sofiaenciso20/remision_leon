@@ -41,9 +41,9 @@ class RemisionPDF extends FPDF {
     }
 
     function Header() {
-        $x = 10; 
+        $x = 10;
         $y = 10;
-        $w = $this->w - 20; 
+        $w = $this->w - 20;
         $h = 32;
 
         $this->Rect($x, $y, $w, $h);
@@ -55,7 +55,7 @@ class RemisionPDF extends FPDF {
         $this->SetFont('Arial','B',10);
         $this->Cell(28,4,'REMISIÓN N°: ',0,0);
         $this->SetFont('Arial','B',12);
-        $this->Cell(15,4,utf8_decode($this->datos['numero_remision']),0,1);
+        $this->Cell(15,4,iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $this->datos['numero_remision']),0,1);
 
         // Fecha
         $this->SetFont('Arial','B',9);
@@ -69,21 +69,21 @@ class RemisionPDF extends FPDF {
         $this->SetX($x+3);
         $this->Cell(12,4,'TIPO: ',0,0);
         $this->SetFont('Arial','',9);
-        $this->Cell(20,4,utf8_decode($this->datos['tipo_remision']),0,1);
+        $this->Cell(20,4,iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $this->datos['tipo_remision']),0,1);
 
         // Cliente
         $this->SetFont('Arial','B',9);
         $this->SetX($x+3);
         $this->Cell(17,4,'CLIENTE: ',0,0);
         $this->SetFont('Arial','',9);
-        $this->Cell(0,4,utf8_decode($this->datos['nombre_cliente']),0,1);
+        $this->Cell(0,4,iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $this->datos['nombre_cliente']),0,1);
 
         // Dirección y Teléfono
         $this->SetFont('Arial','B',9);
         $this->SetX($x+3);
         $this->Cell(20,4,'DIRECCIÓN: ',0,0);
         $this->SetFont('Arial','',9);
-        $this->MultiCell($divisor_x - $x - 23,4,utf8_decode($this->datos['direccion']),0);
+        $this->MultiCell($divisor_x - $x - 23,4,iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $this->datos['direccion']),0);
 
         $this->SetX($x+3);
         $this->SetFont('Arial','B',9);
@@ -107,16 +107,16 @@ class RemisionPDF extends FPDF {
             $this->SetFont('Arial','B',9);
             $this->Cell(17,4,'RECIBE:',0,0);
             $this->SetFont('Arial','',9);
-            $this->Cell(0,4,utf8_decode($recibeInfo),0,1);
+            $this->Cell(0,4,iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $recibeInfo),0,1);
         }
 
         // RESPONSABLE (ARRIBA DEL PDF)
-        if (!empty($this->datos['nombre_responsable'])) {
+        if (isset($this->datos['nombre_responsable']) && !empty($this->datos['nombre_responsable'])) {
             $this->SetX($x+3);
             $this->SetFont('Arial','B',9);
             $this->Cell(28,4,'RESPONSABLE: ',0,0);
             $this->SetFont('Arial','',9);
-            $this->Cell(0,4,utf8_decode($this->datos['nombre_responsable']),0,1);
+            $this->Cell(0,4,iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $this->datos['nombre_responsable']),0,1);
         }
 
         $this->Ln(10);
@@ -152,11 +152,11 @@ class RemisionPDF extends FPDF {
         $this->Cell($tercio-5,4,'Responsable',0,1,'C');
 
         // Nombre del responsable debajo de la firma
-        if (!empty($this->datos['nombre_responsable'])) {
+        if (isset($this->datos['nombre_responsable']) && !empty($this->datos['nombre_responsable'])) {
             $this->SetX(10+($tercio*2));
             $this->SetFont('Arial','',7);
             $this->Cell($tercio-5,4,
-                utf8_decode($this->datos['nombre_responsable']),
+                iconv('UTF-8', 'ISO-8859-1//TRANSLit', $this->datos['nombre_responsable']),
             0,0,'C');
         }
     }
@@ -171,8 +171,8 @@ $pdf->AddPage();
 // TABLA DE ITEMS
 $ancho = $pdf->GetPageWidth() - 20;
 if (count($items) > 0) {
-    $col1 = 15; 
-    $col3 = 25; 
+    $col1 = 15;
+    $col3 = 25;
     $col4 = 25;
     $col2 = $ancho - ($col1 + $col3 + $col4);
 
@@ -191,7 +191,7 @@ if (count($items) > 0) {
         $total_general += $total;
 
         $pdf->Cell($col1,6,$i['cantidad'],1,0,'C');
-        $pdf->Cell($col2,6,utf8_decode(substr($i['descripcion'],0,70)),1,0,'L');
+        $pdf->Cell($col2,6,iconv('UTF-8', 'ISO-8859-1//TRANSLIT', substr($i['descripcion'],0,70)),1,0,'L');
         $pdf->Cell($col3,6,"$ ".number_format($valor,0,',','.'),1,0,'R');
         $pdf->Cell($col4,6,"$ ".number_format($total,0,',','.'),1,1,'R');
     }
@@ -211,7 +211,7 @@ if (!empty($datos['observaciones'])) {
     $pdf->SetFont('Arial','B',8);
     $pdf->Cell(0,5,'OBSERVACIONES:',0,1);
     $pdf->SetFont('Arial','',7);
-    $pdf->MultiCell(0,4,utf8_decode($datos['observaciones']),1,'L');
+    $pdf->MultiCell(0,4,iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $datos['observaciones']),1,'L');
 }
 
 $pdf->Output('I', 'Remision_'.$datos['numero_remision'].'.pdf');
