@@ -137,5 +137,62 @@ class Producto {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // --- NUEVO: Contar productos para paginación ---
+    public function contarProductos($termino = '', $filtroInventario = 'todos', $filtroStock = 'todos') {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE 1=1";
+        $params = [];
+
+        if (!empty($termino)) {
+            $query .= " AND nombre_producto LIKE :termino";
+            $params[':termino'] = '%' . $termino . '%';
+        }
+        if ($filtroInventario !== 'todos') {
+            $query .= " AND maneja_inventario = :maneja_inventario";
+            $params[':maneja_inventario'] = ($filtroInventario === 'con-inventario') ? 1 : 0;
+        }
+        if ($filtroStock !== 'todos' && $filtroInventario !== 'sin-inventario') {
+             if ($filtroStock === 'bajo') $query .= " AND stock_actual <= stock_minimo";
+             if ($filtroStock === 'medio') $query .= " AND stock_actual > stock_minimo AND stock_actual <= (stock_minimo + 10)";
+             if ($filtroStock === 'ok') $query .= " AND stock_actual > (stock_minimo + 10)";
+        }
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        return (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    }
+
+    // --- NUEVO: Obtener productos paginados ---
+    public function obtenerProductosPaginados($termino = '', $filtroInventario = 'todos', $filtroStock = 'todos', $offset = 0, $limit = 10) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE 1=1";
+        $params = [];
+
+        if (!empty($termino)) {
+            $query .= " AND nombre_producto LIKE :termino";
+            $params[':termino'] = '%' . $termino . '%';
+        }
+        if ($filtroInventario !== 'todos') {
+            $query .= " AND maneja_inventario = :maneja_inventario";
+            $params[':maneja_inventario'] = ($filtroInventario === 'con-inventario') ? 1 : 0;
+        }
+        if ($filtroStock !== 'todos' && $filtroInventario !== 'sin-inventario') {
+             if ($filtroStock === 'bajo') $query .= " AND stock_actual <= stock_minimo";
+             if ($filtroStock === 'medio') $query .= " AND stock_actual > stock_minimo AND stock_actual <= (stock_minimo + 10)";
+             if ($filtroStock === 'ok') $query .= " AND stock_actual > (stock_minimo + 10)";
+        }
+
+        $query .= " ORDER BY id_producto ASC LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->conn->prepare($query);
+
+        foreach($params as $key => &$val) {
+            $stmt->bindParam($key, $val);
+        }
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>
