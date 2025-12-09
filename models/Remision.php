@@ -12,7 +12,7 @@ class Remision {
     public $fecha_emision;
     public $id_cliente;
     public $id_persona;
-    public $id_persona_responsable;
+    public $id_responsable;
     public $id_usuario;
     public $observaciones;
     public $id_estado;
@@ -45,7 +45,7 @@ class Remision {
                       fecha_emision=:fecha_emision, 
                       id_cliente=:id_cliente, 
                       id_persona=:id_persona, 
-                      id_persona_responsable=:id_persona_responsable,
+                      id_responsable=:id_responsable,
                       id_usuario=:id_usuario, 
                       observaciones=:observaciones, 
                       id_estado=:id_estado";
@@ -57,7 +57,7 @@ class Remision {
         $stmt->bindParam(":fecha_emision", $this->fecha_emision);
         $stmt->bindParam(":id_cliente", $this->id_cliente);
         $stmt->bindParam(":id_persona", $this->id_persona);
-        $stmt->bindParam(":id_persona_responsable", $this->id_persona_responsable);
+        $stmt->bindParam(":id_responsable", $this->id_responsable);
         $stmt->bindParam(":id_usuario", $this->id_usuario);
         $stmt->bindParam(":observaciones", $this->observaciones);
         $stmt->bindParam(":id_estado", $this->id_estado);
@@ -93,7 +93,7 @@ class Remision {
               LEFT JOIN personas_contacto pc 
                      ON r.id_persona = pc.id_persona
               LEFT JOIN personas_responsables pr 
-                     ON r.id_persona_responsable = pr.id_responsable
+                     ON r.id_responsable = pr.id_responsable
               LEFT JOIN estados e 
                      ON r.id_estado = e.id_estado
               WHERE r.id_remision = :id";
