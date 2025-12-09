@@ -274,5 +274,52 @@ class PersonaContacto {
         error_log("[DB_FIX] Error en crear PersonaContacto con tipo: " . print_r($errorInfo, true));
         return false;
     }
+
+    // --- NUEVO: Contar personas para la paginación ---
+    public function contarPersonasContacto($termino = '') {
+        $query = "SELECT COUNT(pc.id_persona) as total
+                  FROM " . $this->table_name . " pc
+                  LEFT JOIN clientes c ON pc.id_cliente = c.id_cliente
+                  WHERE 1=1";
+        $params = [];
+
+        if (!empty($termino)) {
+            $query .= " AND (pc.nombre_persona LIKE :termino OR c.nombre_cliente LIKE :termino)";
+            $params[':termino'] = '%' . $termino . '%';
+        }
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return (int)$row['total'];
+    }
+
+    // --- NUEVO: Obtener personas con paginación y búsqueda ---
+    public function obtenerPersonasContactoPaginadas($termino = '', $offset = 0, $limit = 10) {
+        $query = "SELECT pc.*, c.nombre_cliente
+                  FROM " . $this->table_name . " pc
+                  LEFT JOIN clientes c ON pc.id_cliente = c.id_cliente
+                  WHERE 1=1";
+        $params = [];
+
+        if (!empty($termino)) {
+            $query .= " AND (pc.nombre_persona LIKE :termino OR c.nombre_cliente LIKE :termino)";
+            $params[':termino'] = "%{$termino}%";
+        }
+
+        $query .= " ORDER BY pc.id_persona ASC LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->conn->prepare($query);
+
+        if (!empty($termino)) {
+            $stmt->bindValue(':termino', $params[':termino']);
+        }
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

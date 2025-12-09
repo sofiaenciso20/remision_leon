@@ -210,5 +210,47 @@ class Cliente {
         
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    // --- NUEVO: Contar clientes para la paginación ---
+    public function contarClientes($termino = '') {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE 1=1";
+        $params = [];
+
+        if (!empty($termino)) {
+            $query .= " AND (nombre_cliente LIKE :termino OR nit LIKE :termino)";
+            $params[':termino'] = '%' . $termino . '%';
+        }
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return (int)$row['total'];
+    }
+
+    // --- NUEVO: Obtener clientes con paginación y búsqueda ---
+    public function obtenerClientesPaginados($termino = '', $offset = 0, $limit = 10) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE 1=1";
+        $params = [];
+
+        if (!empty($termino)) {
+            $query .= " AND (nombre_cliente LIKE :termino OR nit LIKE :termino)";
+            $params[':termino'] = "%{$termino}%";
+        }
+
+        $query .= " ORDER BY id_cliente ASC LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->conn->prepare($query);
+
+        // Bind parameters
+        if (!empty($termino)) {
+            $stmt->bindValue(':termino', $params[':termino']);
+        }
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>
