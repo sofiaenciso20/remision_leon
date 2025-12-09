@@ -485,19 +485,20 @@ $(document).ready(function() {
         }
     });
 
+    // Cargar personas responsables al inicio
+    cargarPersonasResponsable();
+
     // Cambio de cliente
     $('#cliente').on('change', function() {
         const clienteId = $(this).val();
 
         if (clienteId) {
             cargarPersonasContacto(clienteId);
-            cargarPersonasResponsable(clienteId);
-
+            // Ya no es necesario cargar responsables aquí, se cargan una vez al inicio.
             $('#cliente_persona_contacto').val(clienteId);
             $('#cliente_persona_responsable').val(clienteId);
         } else {
             $('#persona_contacto').empty().append('<option value="">Seleccione...</option>');
-            $('#persona_responsable').empty().append('<option value="">Seleccione...</option>');
             $('#cliente_persona_contacto').val('');
             $('#cliente_persona_responsable').val('');
         }
@@ -642,36 +643,24 @@ $(document).ready(function() {
         });
     });
 
-    // Crear persona responsable
+    // Crear persona responsable (simplificado)
     $('#formPersonaResponsable').on('submit', function(e) {
         e.preventDefault();
-
-        const clienteId = $('#cliente').val();
-        if (!clienteId) {
-            Swal.fire('Advertencia', 'Debe seleccionar un cliente antes de crear un responsable', 'warning');
-            return;
-        }
-
-        const data = {
-            id_cliente: $('#cliente_persona_responsable').val(),
-            nombre_responsable: $('#nombre_persona_responsable').val(),
-            correo: $('#correo_persona_responsable').val(),
-            telefono: $('#telefono_persona_responsable').val()
-        };
 
         $.ajax({
             url: 'ajax/crear_persona_responsable.php',
             method: 'POST',
-            data: data,
+            data: $(this).serialize(), // Solo enviará los campos del formulario
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
                     $('#modalPersonaResponsable').modal('hide');
                     $('#formPersonaResponsable')[0].reset();
 
-                    const newId = response.id || response.id_responsable;
+                    const newId = response.id_responsable;
 
-                    cargarPersonasResponsable(clienteId, newId);
+                    // Recargar la lista y seleccionar el nuevo
+                    cargarPersonasResponsable(newId);
 
                     Swal.fire('¡Éxito!', 'Persona responsable creada correctamente', 'success');
                 } else {
@@ -845,31 +834,28 @@ function cargarPersonasContacto(clienteId) {
     });
 }
 
-function cargarPersonasResponsable(clienteId, seleccionarId = null) {
+function cargarPersonasResponsable(seleccionarId = null) {
     $.ajax({
-        url: 'ajax/obtener_persona_responsable.php',
-        method: 'POST',
-        data: { id_cliente: clienteId },
+        url: 'ajax/listar_todas_personas_responsables.php',
+        method: 'GET', // Cambiado a GET ya que no se envían datos
         dataType: 'json',
         success: function(personas) {
-            $('#persona_responsable').empty().append('<option value="">Seleccione...</option>');
+            const select = $('#persona_responsable');
+            select.empty().append('<option value="">Seleccione...</option>');
 
             if (Array.isArray(personas)) {
                 personas.forEach(function(persona) {
-                    const id = persona.id_persona || persona.id || persona.id_responsable;
-                    const nombre = persona.nombre_persona || persona.nombre || persona.nombre_responsable;
-
-                    const selectedAttr = (seleccionarId && seleccionarId == id) ? 'selected' : '';
-
-                    $('#persona_responsable').append(
-                        `<option value="${id}" ${selectedAttr}>${nombre}</option>`
-                    );
+                    const option = new Option(persona.nombre_responsable, persona.id_responsable);
+                    select.append(option);
                 });
             }
 
             if (seleccionarId) {
-                $('#persona_responsable').val(seleccionarId);
+                select.val(seleccionarId);
             }
+        },
+        error: function() {
+            console.error("Error al cargar las personas responsables.");
         }
     });
 }

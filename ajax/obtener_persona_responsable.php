@@ -1,27 +1,27 @@
 <?php
+// ajax/obtener_persona_responsable.php
+header('Content-Type: application/json');
+
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/PersonaResponsable.php';
 
-header('Content-Type: application/json');
+$database = new Database();
+$db = $database->getConnection();
 
-if (isset($_POST['id_cliente'])) {
-    try {
-        $database = new Database();
-        $db = $database->getConnection();
+$persona = new PersonaResponsable($db);
 
-        if (!$db) {
-            throw new Exception('Error de conexión a la base de datos');
-        }
+$id_responsable = isset($_POST['id_responsable']) ? $_POST['id_responsable'] : die(json_encode(['success' => false, 'message' => 'ID no proporcionado.']));
 
-        $personaResponsable = new PersonaResponsable($db);
-        $personas = $personaResponsable->obtenerPorCliente($_POST['id_cliente']);
+$persona->id_responsable = $id_responsable;
 
-        echo json_encode($personas);
-    } catch (Exception $e) {
-        error_log("Error al obtener personas responsables: " . $e->getMessage());
-        echo json_encode([]);
+try {
+    $datos_persona = $persona->obtenerPorId();
+    if ($datos_persona) {
+        echo json_encode(['success' => true, 'data' => $datos_persona]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Persona responsable no encontrada.']);
     }
-} else {
-    echo json_encode([]);
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
 ?>

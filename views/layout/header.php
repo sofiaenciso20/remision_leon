@@ -104,6 +104,12 @@
                             <p>Personas de Contacto</p>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="PersonasResponsables.php" class="nav-link">
+                            <i class="nav-icon fas fa-user-check"></i>
+                            <p>Personas Responsables</p>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         </div>
