@@ -212,8 +212,10 @@ function crearFilaPersona(p) {
             <td>${p.correo || '-'}</td>
             <td>${p.nombre_cliente || 'N/A'}</td>
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-info" onclick="verPersona(${p.id_persona})"><i class="fas fa-eye"></i></button>
-                <button class="btn btn-sm btn-outline-warning" onclick="editarPersona(${p.id_persona})"><i class="fas fa-edit"></i></button>
+                <div class="d-flex justify-content-center gap-1">
+                    <button class="btn btn-sm btn-outline-info" onclick="verPersona(${p.id_persona})"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="editarPersona(${p.id_persona})"><i class="fas fa-edit"></i></button>
+                </div>
             </td>
         </tr>`;
 }
