@@ -7,16 +7,16 @@ $db = (new Database())->getConnection();
 try {
 
     // Validación SOLO del nombre (cliente ya no es obligatorio)
-    if (!isset($_POST['nombre']) || empty(trim($_POST['nombre']))) {
+    if (!isset($_POST['nombre_responsable']) || empty(trim($_POST['nombre_responsable']))) {
         throw new Exception("El nombre del responsable es obligatorio.");
     }
 
     // id_cliente puede venir o no
-    $id_cliente = isset($_POST['id_cliente']) && $_POST['id_cliente'] !== "" 
-                    ? intval($_POST['id_cliente']) 
+    $id_cliente = isset($_POST['id_cliente']) && $_POST['id_cliente'] !== ""
+                    ? intval($_POST['id_cliente'])
                     : null;
 
-    $nombre = trim($_POST['nombre']);
+    $nombre = trim($_POST['nombre_responsable']);
     $correo = isset($_POST['correo']) ? trim($_POST['correo']) : null;
     $telefono = isset($_POST['telefono']) ? trim($_POST['telefono']) : null;
 
