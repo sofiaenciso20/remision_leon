@@ -115,8 +115,11 @@ function crearFilaRemision(r) {
             <td>${r.nit || 'N/A'}</td>
             <td>${r.nombre_persona || '-'}</td>
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-info" onclick="verRemision(${r.id_remision})"><i class="fas fa-eye"></i></button>
-                <a href="generar_pdf.php?id=${r.id_remision}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-pdf"></i></a>
+                <div class="d-flex justify-content-center gap-1">
+                    <button class="btn btn-sm btn-outline-info" onclick="verRemision(${r.id_remision})" title="Ver Detalles"><i class="fas fa-eye"></i></button>
+                    <a href="editar_remision.php?id=${r.id_remision}" class="btn btn-sm btn-outline-warning" title="Editar"><i class="fas fa-edit"></i></a>
+                    <a href="generar_pdf.php?id=${r.id_remision}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Ver PDF"><i class="fas fa-file-pdf"></i></a>
+                </div>
             </td>
         </tr>`;
 }

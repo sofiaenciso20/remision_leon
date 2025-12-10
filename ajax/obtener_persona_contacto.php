@@ -1,27 +1,30 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
+// ajax/obtener_persona_contacto.php
 header('Content-Type: application/json');
 
-$db = (new Database())->getConnection();
-$id_cliente = isset($_POST['id_cliente']) ? intval($_POST['id_cliente']) : null;
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/PersonaContacto.php';
+
+$database = new Database();
+$db = $database->getConnection();
+$persona = new PersonaContacto($db);
+
+$id_persona = isset($_POST['id_persona']) ? (int)$_POST['id_persona'] : 0;
+
+if ($id_persona <= 0) {
+    echo json_encode(['success' => false, 'message' => 'ID de persona no válido.']);
+    exit;
+}
 
 try {
-    if ($id_cliente > 0) {
-        $sql = "SELECT id_persona, nombre_persona, cargo, telefono, correo
-                FROM personas_contacto
-                WHERE id_cliente = :id_cliente
-                ORDER BY nombre_persona ASC";
-        $stmt = $db->prepare($sql);
-        $stmt->bindValue(':id_cliente', $id_cliente, PDO::PARAM_INT);
-        $stmt->execute();
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        $rows = [];
-    }
+    $datos_persona = $persona->obtenerPorId($id_persona);
 
-    echo json_encode($rows);
-} catch (PDOException $e) {
-    error_log("ERROR obtener_personas_contacto: " . $e->getMessage());
-    echo json_encode([]);
+    if ($datos_persona) {
+        echo json_encode(['success' => true, 'data' => $datos_persona]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Persona de contacto no encontrada.']);
+    }
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
 }
 ?>
