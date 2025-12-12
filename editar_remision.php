@@ -140,8 +140,11 @@ $(document).ready(function() {
                 results: data.map(item => ({ id: item.id_cliente, text: item.nombre_cliente }))
             })
         }
-    }).on('change', function() {
-        cargarPersonasContacto($(this).val(), null);
+    }).on('change', function(e) {
+        // Solo cargar personas si el cambio es por interacción del usuario
+        if(e.originalEvent) {
+            cargarPersonasContacto($(this).val(), null);
+        }
     });
 
     cargarRemisionParaEditar(remisionId);
@@ -194,17 +197,28 @@ function cargarRemisionParaEditar(id) {
                 const remision = response.data;
 
                 $('#numero_remision').val(remision.numero_remision);
-                $('#fecha_emision').val(remision.fecha_emision);
+                // Corregir el formato de la fecha, manejando fechas inválidas
+                if (remision.fecha_emision && remision.fecha_emision.startsWith('0000-00-00')) {
+                    $('#fecha_emision').val(''); // Dejar en blanco si la fecha no es válida
+                } else if (remision.fecha_emision) {
+                    $('#fecha_emision').val(remision.fecha_emision.split(' ')[0]);
+                }
                 $('#tipo_remision').val(remision.tipo_remision);
                 $('#observaciones').val(remision.observaciones);
 
+                // Cargar personas responsables (no depende de nada)
+                cargarPersonasResponsable(remision.id_responsable);
+
+                // Cargar cliente y LUEGO cargar contactos
                 if (remision.id_cliente && remision.nombre_cliente) {
                     const clienteOption = new Option(remision.nombre_cliente, remision.id_cliente, true, true);
                     $('#cliente').append(clienteOption).trigger('change');
+
+                    // Aseguramos que la carga de contactos se hace DESPUÉS de popular el cliente
+                    // y con el ID de la persona correcta a seleccionar.
+                    cargarPersonasContacto(remision.id_cliente, remision.id_persona);
                 }
 
-                cargarPersonasContacto(remision.id_cliente, remision.id_persona);
-                cargarPersonasResponsable(remision.id_responsable);
 
                 $('#items-container').empty();
                 if (remision.items && remision.items.length > 0) {

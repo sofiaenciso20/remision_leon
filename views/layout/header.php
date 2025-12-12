@@ -61,7 +61,7 @@
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <!-- Brand Logo: usa la ruta que indicaste -->
         <a href="index.php" class="brand-link">
-            <img src="assets/img/logo.png" alt="León Gráficas" class="brand-image img-circle elevation-3 logo-leon">
+            <img src="img/logo.png" alt="León Gráficas" class="brand-image img-circle elevation-3 logo-leon">
             <span class="brand-text font-weight-light">León Gráficas</span>
         </a>
 

@@ -71,8 +71,12 @@ class Remision {
     }
 
     public function contarRemisiones($termino = '', $fecha = '') {
-        $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " r LEFT JOIN clientes c ON r.id_cliente = c.id_cliente WHERE 1=1";
+        $query = "SELECT COUNT(r.id_remision) as total
+                  FROM " . $this->table_name . " r
+                  LEFT JOIN clientes c ON r.id_cliente = c.id_cliente
+                  WHERE 1=1";
         $params = [];
+
         if (!empty($termino)) {
             $query .= " AND (r.numero_remision LIKE :termino OR c.nombre_cliente LIKE :termino OR c.nit LIKE :termino)";
             $params[':termino'] = '%' . $termino . '%';
@@ -81,9 +85,11 @@ class Remision {
             $query .= " AND r.fecha_emision = :fecha";
             $params[':fecha'] = $fecha;
         }
+
         $stmt = $this->conn->prepare($query);
         $stmt->execute($params);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
         return (int)$row['total'];
     }
 
@@ -94,6 +100,7 @@ class Remision {
                   LEFT JOIN personas_contacto pc ON r.id_persona = pc.id_persona
                   WHERE 1=1";
         $params = [];
+
         if (!empty($termino)) {
             $query .= " AND (r.numero_remision LIKE :termino OR c.nombre_cliente LIKE :termino OR c.nit LIKE :termino)";
             $params[':termino'] = "%{$termino}%";
@@ -102,12 +109,16 @@ class Remision {
             $query .= " AND r.fecha_emision = :fecha";
             $params[':fecha'] = $fecha;
         }
+
         $query .= " ORDER BY r.id_remision DESC LIMIT :limit OFFSET :offset";
+
         $stmt = $this->conn->prepare($query);
+
         if (!empty($termino)) $stmt->bindValue(':termino', $params[':termino']);
         if (!empty($fecha)) $stmt->bindValue(':fecha', $params[':fecha']);
         $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -129,7 +140,7 @@ class Remision {
         $remision = $this->obtenerPorIdConResponsable($id);
         if ($remision) {
             $query_items = "SELECT ri.*, p.nombre_producto
-                            FROM remision_items ri
+                            FROM items_remisionados ri
                             LEFT JOIN productos p ON ri.id_producto = p.id_producto
                             WHERE ri.id_remision = :id_remision";
             $stmt_items = $this->conn->prepare($query_items);
