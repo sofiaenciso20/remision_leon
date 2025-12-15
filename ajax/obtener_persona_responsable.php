@@ -1,38 +1,27 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
+// ajax/obtener_persona_responsable.php
 header('Content-Type: application/json');
 
-$db = (new Database())->getConnection();
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/PersonaResponsable.php';
 
-$id_cliente = isset($_POST['id_cliente']) ? intval($_POST['id_cliente']) : 0;
+$database = new Database();
+$db = $database->getConnection();
+
+$persona = new PersonaResponsable($db);
+
+$id_responsable = isset($_POST['id_responsable']) ? $_POST['id_responsable'] : die(json_encode(['success' => false, 'message' => 'ID no proporcionado.']));
+
+$persona->id_responsable = $id_responsable;
 
 try {
-
-    if ($id_cliente > 0) {
-
-        // Si viene cliente → filtra por cliente
-        $sql = "SELECT id_responsable AS id_persona, nombre_responsable AS nombre_persona 
-                FROM personas_responsables 
-                WHERE id_cliente = :id_cliente 
-                ORDER BY nombre_responsable ASC";
-
-        $stmt = $db->prepare($sql);
-        $stmt->bindValue(':id_cliente', $id_cliente, PDO::PARAM_INT);
-        $stmt->execute();
-
+    $datos_persona = $persona->obtenerPorId();
+    if ($datos_persona) {
+        echo json_encode(['success' => true, 'data' => $datos_persona]);
     } else {
-
-        // Si NO viene cliente → trae TODOS los responsables
-        $sql = "SELECT id_responsable AS id_persona, nombre_responsable AS nombre_persona 
-                FROM personas_responsables 
-                ORDER BY nombre_responsable ASC";
-
-        $stmt = $db->query($sql);
+        echo json_encode(['success' => false, 'message' => 'Persona responsable no encontrada.']);
     }
-
-    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-
 } catch (Exception $e) {
-    error_log("ERROR obtener_personas_responsable: " . $e->getMessage());
-    echo json_encode([]);
+    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
+?>

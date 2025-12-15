@@ -29,8 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 🔹 NUEVO: Tipo Remisión y Persona Responsable
         $remision->tipo_remision = $_POST['tipo_remision'] ?? 'Venta';
-        $remision->id_persona_responsable = !empty($_POST['id_persona_responsable']) 
-                                            ? (int) $_POST['id_persona_responsable'] 
+        $remision->id_responsable = !empty($_POST['id_responsable']) 
+                                            ? (int) $_POST['id_responsable'] 
                                             : null;
 
         // Campos anteriores

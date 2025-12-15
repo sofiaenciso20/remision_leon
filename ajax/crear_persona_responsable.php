@@ -1,47 +1,32 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
+// ajax/crear_persona_responsable.php
 header('Content-Type: application/json');
 
-$db = (new Database())->getConnection();
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/PersonaResponsable.php';
+
+$database = new Database();
+$db = $database->getConnection();
+
+$persona = new PersonaResponsable($db);
+
+$nombre_responsable = isset($_POST['nombre_responsable']) ? $_POST['nombre_responsable'] : die(json_encode(['success' => false, 'message' => 'Nombre no proporcionado.']));
+
+// Asignar valores al objeto persona
+$persona->nombre_responsable = $nombre_responsable;
+
+if (empty($persona->nombre_responsable)) {
+    echo json_encode(['success' => false, 'message' => 'El nombre del responsable es obligatorio.']);
+    exit;
+}
 
 try {
-
-    // Validación SOLO del nombre (cliente ya no es obligatorio)
-    if (!isset($_POST['nombre']) || empty(trim($_POST['nombre']))) {
-        throw new Exception("El nombre del responsable es obligatorio.");
+    if ($persona->crear()) {
+        echo json_encode(['success' => true, 'id' => $persona->id_responsable, 'nombre_responsable' => $persona->nombre_responsable]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'No se pudo crear la persona responsable.']);
     }
-
-    // id_cliente puede venir o no
-    $id_cliente = isset($_POST['id_cliente']) && $_POST['id_cliente'] !== "" 
-                    ? intval($_POST['id_cliente']) 
-                    : null;
-
-    $nombre = trim($_POST['nombre']);
-    $correo = isset($_POST['correo']) ? trim($_POST['correo']) : null;
-    $telefono = isset($_POST['telefono']) ? trim($_POST['telefono']) : null;
-
-    $sql = "INSERT INTO personas_responsables (id_cliente, nombre_responsable, correo, telefono)
-            VALUES (:id_cliente, :nombre_responsable, :correo, :telefono)";
-
-    $stmt = $db->prepare($sql);
-    $stmt->bindValue(':id_cliente', $id_cliente, PDO::PARAM_INT);
-    $stmt->bindValue(':nombre_responsable', $nombre);
-    $stmt->bindValue(':correo', $correo);
-    $stmt->bindValue(':telefono', $telefono);
-
-    $stmt->execute();
-
-    $id_nuevo = $db->lastInsertId();
-
-    echo json_encode([
-        'success' => true,
-        'id' => $id_nuevo,
-        'nombre_responsable' => $nombre
-    ]);
-
 } catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
+    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
+?>

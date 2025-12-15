@@ -127,7 +127,7 @@ include 'views/layout/header.php';
                 </div>
             </div>
 
-            <form id="formRemision">
+            <form id="formRemision" novalidate>
                 <div class="card-body p-4">
                     <div class="row mb-4">
                         <div class="col-md-4 col-lg-3 mb-3">
@@ -142,6 +142,7 @@ include 'views/layout/header.php';
                                 <label for="fecha_emision" class="form-label">Fecha de Emisión *</label>
                                 <input type="date" class="form-control form-control-lg" id="fecha_emision" name="fecha_emision"
                                        value="<?php echo date('Y-m-d'); ?>" required>
+                                <div class="invalid-feedback">Por favor ingrese la fecha de emisión.</div>
                             </div>
                         </div>
 
@@ -153,6 +154,7 @@ include 'views/layout/header.php';
                                     <option value="Venta">Venta</option>
                                     <option value="Alquiler">Alquiler</option>
                                 </select>
+                                <div class="invalid-feedback">Por favor seleccione un tipo de remisión.</div>
                             </div>
                         </div>
                     </div>
@@ -171,6 +173,7 @@ include 'views/layout/header.php';
                                         <i class="fas fa-plus mr-1"></i> Nuevo
                                     </button>
                                 </div>
+                                <div class="invalid-feedback">Por favor seleccione un cliente.</div>
                             </div>
                         </div>
 
@@ -194,7 +197,7 @@ include 'views/layout/header.php';
                             <div class="form-group">
                                 <label for="persona_responsable" class="form-label">Persona Responsable</label>
                                 <div class="select-group">
-                                    <select class="form-control" id="persona_responsable" name="id_persona_responsable">
+                                    <select class="form-control" id="persona_responsable" name="id_responsable">
                                         <option value="">Seleccione...</option>
                                     </select>
                                     <button type="button" class="btn btn-success" onclick="abrirModalPersonaResponsable()">
@@ -263,22 +266,25 @@ include 'views/layout/header.php';
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="formCliente">
+            <form id="formCliente" novalidate>
                 <div class="modal-body p-4">
                     <div class="row">
                         <div class="col-md-8 mb-3">
                             <div class="form-group">
                                 <label for="nombre_cliente" class="form-label">Nombre del Cliente *</label>
                                 <input type="text" class="form-control" id="nombre_cliente" name="nombre_cliente" required>
+                                <div class="invalid-feedback">Por favor ingrese el nombre del cliente.</div>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
                             <div class="form-group">
                                 <label for="tipo_cliente" class="form-label">Tipo *</label>
                                 <select class="form-control" id="tipo_cliente" name="tipo_cliente" required>
+                                    <option value="">Seleccione...</option>
                                     <option value="persona">Persona</option>
                                     <option value="empresa">Empresa</option>
                                 </select>
+                                <div class="invalid-feedback">Por favor seleccione un tipo.</div>
                             </div>
                         </div>
                     </div>
@@ -288,6 +294,7 @@ include 'views/layout/header.php';
                             <div class="form-group">
                                 <label for="nit" class="form-label">NIT/Cédula *</label>
                                 <input type="text" class="form-control" id="nit" name="nit" required>
+                                <div class="invalid-feedback">Por favor ingrese el NIT o cédula.</div>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -306,6 +313,7 @@ include 'views/layout/header.php';
                     <div class="form-group mb-3">
                         <label for="correo_cliente" class="form-label">Correo Electrónico</label>
                         <input type="email" class="form-control" id="correo_cliente" name="correo">
+                        <div class="invalid-feedback">Por favor ingrese un correo electrónico válido.</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -333,13 +341,14 @@ include 'views/layout/header.php';
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="formPersonaContacto">
+            <form id="formPersonaContacto" class="needs-validation" novalidate>
                 <div class="modal-body p-4">
                     <input type="hidden" id="cliente_persona_contacto" name="id_cliente">
 
                     <div class="form-group mb-3">
                         <label for="nombre_persona_contacto" class="form-label">Nombre Completo *</label>
                         <input type="text" class="form-control" id="nombre_persona_contacto" name="nombre_persona" required>
+                        <div class="invalid-feedback">Por favor ingrese el nombre de la persona.</div>
                     </div>
 
                     <div class="row">
@@ -387,7 +396,7 @@ include 'views/layout/header.php';
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="formPersonaResponsable">
+            <form id="formPersonaResponsable" class="needs-validation" novalidate>
                 <div class="modal-body p-4">
 
                     <input type="hidden" id="cliente_persona_responsable" name="id_cliente">
@@ -395,6 +404,7 @@ include 'views/layout/header.php';
                     <div class="form-group mb-3">
                         <label for="nombre_persona_responsable" class="form-label">Nombre Completo *</label>
                         <input type="text" class="form-control" id="nombre_persona_responsable" name="nombre_responsable" required>
+                        <div class="invalid-feedback">Por favor ingrese el nombre de la persona responsable.</div>
                     </div>
 
                     <div class="form-group mb-3">
@@ -467,7 +477,7 @@ $(document).ready(function() {
         width: '100%',
         dropdownParent: $(document.body),
         ajax: {
-            url: 'remisiones/ajax/buscar_clientes.php',
+            url: 'ajax/buscar_clientes.php',
             dataType: 'json',
             delay: 250,
             data: function (params) {
@@ -485,57 +495,83 @@ $(document).ready(function() {
         }
     });
 
+    // Cargar personas responsables al inicio
+    cargarPersonasResponsable();
+
     // Cambio de cliente
     $('#cliente').on('change', function() {
         const clienteId = $(this).val();
 
         if (clienteId) {
             cargarPersonasContacto(clienteId);
-            cargarPersonasResponsable(clienteId);
-
+            // Ya no es necesario cargar responsables aquí, se cargan una vez al inicio.
             $('#cliente_persona_contacto').val(clienteId);
             $('#cliente_persona_responsable').val(clienteId);
         } else {
             $('#persona_contacto').empty().append('<option value="">Seleccione...</option>');
-            $('#persona_responsable').empty().append('<option value="">Seleccione...</option>');
             $('#cliente_persona_contacto').val('');
             $('#cliente_persona_responsable').val('');
         }
     });
 
-    // Crear remisión
+    // Crear remisión con validación
     $('#formRemision').on('submit', function(e) {
         e.preventDefault();
+        const form = this;
+
+        // Validar campos principales del formulario
+        if (form.checkValidity() === false) {
+            e.stopPropagation();
+            $(form).addClass('was-validated');
+            // Quitar validación de select2 al seleccionar
+            $('#cliente').one('change', function() {
+                if ($(this).val()) {
+                    $(form).removeClass('was-validated');
+                }
+            });
+            return;
+        }
+        $(form).addClass('was-validated');
 
         const items = [];
         let itemsValidos = true;
 
+        // Validar cada item
         $('.item-row').each(function() {
-            const productoId = $(this).find('.id-producto').val();
             const descripcion = $(this).find('.descripcion').val();
             const cantidad = $(this).find('.cantidad').val();
-            const valorUnitario = $(this).find('.valor-unitario').val();
+            const productoSelect = $(this).find('.select2-producto');
+            const cantidadInput = $(this).find('.cantidad');
 
-            if (!descripcion || !cantidad) {
+            // Resetear estilos de validación personalizados
+            productoSelect.next('.select2-container').css('border', '');
+            cantidadInput.removeClass('is-invalid');
+
+            if (!descripcion || !cantidad || parseInt(cantidad) < 1) {
                 itemsValidos = false;
-                return;
+                if (!descripcion) {
+                    productoSelect.next('.select2-container').css({ 'border': '1px solid #dc3545', 'border-radius': '.25rem' });
+                }
+                if (!cantidad || parseInt(cantidad) < 1) {
+                    cantidadInput.addClass('is-invalid');
+                }
+            } else {
+                items.push({
+                    id_producto: $(this).find('.id-producto').val() || null,
+                    descripcion: descripcion,
+                    cantidad: parseInt(cantidad),
+                    valor_unitario: parseFloat($(this).find('.valor-unitario').val()) || 0
+                });
             }
-
-            items.push({
-                id_producto: productoId || null,
-                descripcion: descripcion,
-                cantidad: parseInt(cantidad),
-                valor_unitario: parseFloat(valorUnitario) || 0
-            });
         });
 
-        if (!itemsValidos) {
-            Swal.fire('Error', 'Todos los items deben tener al menos descripción y cantidad', 'error');
+        if (items.length === 0) {
+            Swal.fire('Advertencia', 'Debe agregar al menos un item a la remisión.', 'warning');
             return;
         }
 
-        if (items.length === 0) {
-            Swal.fire('Error', 'Debe agregar al menos un item a la remisión', 'error');
+        if (!itemsValidos) {
+            Swal.fire('Items Incompletos', 'Cada item debe tener un producto y una cantidad válida.', 'error');
             return;
         }
 
@@ -543,7 +579,7 @@ $(document).ready(function() {
         formData.append('items', JSON.stringify(items));
 
         $.ajax({
-            url: 'remisiones/ajax/crear_remision.php',
+            url: 'ajax/crear_remision.php',
             method: 'POST',
             data: formData,
             processData: false,
@@ -565,7 +601,7 @@ $(document).ready(function() {
                         buttonsStyling: false
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.open(`remisiones/generar_pdf.php?id=${response.id_remision}`, '_blank');
+                            window.open(`generar_pdf.php?id=${response.id_remision}`, '_blank');
                         }
                         limpiarFormulario();
                         cargarSiguienteNumero();
@@ -581,97 +617,114 @@ $(document).ready(function() {
         });
     });
 
-    // Crear cliente
+    // Manual validation for Cliente form
     $('#formCliente').on('submit', function(e) {
         e.preventDefault();
+        let esValido = true;
 
-        $.ajax({
-            url: 'remisiones/ajax/crear_cliente.php',
-            method: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    $('#modalCliente').modal('hide');
-                    $('#formCliente')[0].reset();
+        // Limpiar validación previa
+        $(this).find('.is-invalid').removeClass('is-invalid');
 
-                    const id = response.cliente?.id_cliente || response.id_cliente;
-                    const text = response.cliente?.nombre_cliente || response.nombre_cliente;
-
-                    if (id && text) {
-                        const newOption = new Option(text, id, true, true);
-                        $('#cliente').append(newOption).trigger('change');
-                    }
-
-                    Swal.fire('¡Éxito!', 'Cliente creado correctamente', 'success');
-                } else {
-                    Swal.fire('Error', response.message || 'Error al crear el cliente', 'error');
-                }
-            },
-            error: function() {
-                Swal.fire('Error', 'Error al crear el cliente', 'error');
-            }
-        });
-    });
-
-    // Crear persona de contacto
-    $('#formPersonaContacto').on('submit', function(e) {
-        e.preventDefault();
-
-        $.ajax({
-            url: 'remisiones/ajax/crear_persona_contacto.php',
-            method: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    $('#modalPersonaContacto').modal('hide');
-                    $('#formPersonaContacto')[0].reset();
-
-                    const nuevaPersona = response.persona || response.data;
-                    const clienteId = $('#cliente').val();
-
-                    cargarPersonasContacto(clienteId);
-                    $('#persona_contacto').val(nuevaPersona.id_persona);
-
-                    Swal.fire('¡Éxito!', 'Persona creada correctamente', 'success');
-                } else {
-                    Swal.fire('Error', response.message || 'Error al crear la persona', 'error');
-                }
-            }
-        });
-    });
-
-    // Crear persona responsable
-    $('#formPersonaResponsable').on('submit', function(e) {
-        e.preventDefault();
-
-        const clienteId = $('#cliente').val();
-        if (!clienteId) {
-            Swal.fire('Advertencia', 'Debe seleccionar un cliente antes de crear un responsable', 'warning');
-            return;
+        // Validar nombre_cliente
+        const nombre = $('#nombre_cliente');
+        if (!nombre.val()) {
+            nombre.addClass('is-invalid');
+            esValido = false;
         }
 
-        $.ajax({
-            url: 'remisiones/ajax/crear_persona_responsable.php',
-            method: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    $('#modalPersonaResponsable').modal('hide');
-                    $('#formPersonaResponsable')[0].reset();
+        // Validar nit
+        const nit = $('#nit');
+        if (!nit.val()) {
+            nit.addClass('is-invalid');
+            esValido = false;
+        }
 
-                    const newId = response.id || response.id_responsable;
+        // Validar tipo_cliente
+        const tipo = $('#tipo_cliente');
+        if (!tipo.val()) {
+            tipo.addClass('is-invalid');
+            esValido = false;
+        }
 
-                    cargarPersonasResponsable(clienteId, newId);
+        if (esValido) {
+            $.ajax({
+                url: 'ajax/crear_cliente.php',
+                method: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalCliente').modal('hide');
+                        $('#formCliente')[0].reset();
+                        $('#formCliente .is-invalid').removeClass('is-invalid');
 
-                    Swal.fire('¡Éxito!', 'Persona responsable creada correctamente', 'success');
-                } else {
-                    Swal.fire('Error', response.message || 'Error al crear la persona responsable', 'error');
+                        const id = response.cliente?.id_cliente || response.id_cliente;
+                        const text = response.cliente?.nombre_cliente || response.nombre_cliente;
+
+                        if (id && text) {
+                            const newOption = new Option(text, id, true, true);
+                            $('#cliente').append(newOption).trigger('change');
+                        }
+                        Swal.fire('¡Éxito!', 'Cliente creado correctamente', 'success');
+                    } else {
+                        Swal.fire('Error', response.message || 'Error al crear el cliente', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Error al crear el cliente', 'error');
                 }
-            }
-        });
+            });
+        }
+    });
+
+    // AJAX submission for Persona Contacto
+    $('#formPersonaContacto').on('submit', function(e) {
+        if (this.checkValidity()) {
+            e.preventDefault();
+            $.ajax({
+                url: 'ajax/crear_persona_contacto.php',
+                method: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalPersonaContacto').modal('hide');
+                        $('#formPersonaContacto').removeClass('was-validated')[0].reset();
+                        const nuevaPersona = response.persona || response.data;
+                        const clienteId = $('#cliente').val();
+                        cargarPersonasContacto(clienteId);
+                        $('#persona_contacto').val(nuevaPersona.id_persona);
+                        Swal.fire('¡Éxito!', 'Persona creada correctamente', 'success');
+                    } else {
+                        Swal.fire('Error', response.message || 'Error al crear la persona', 'error');
+                    }
+                }
+            });
+        }
+    });
+
+    // AJAX submission for Persona Responsable
+    $('#formPersonaResponsable').on('submit', function(e) {
+        if (this.checkValidity()) {
+            e.preventDefault();
+            $.ajax({
+                url: 'ajax/crear_persona_responsable.php',
+                method: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalPersonaResponsable').modal('hide');
+                        $('#formPersonaResponsable').removeClass('was-validated')[0].reset();
+                        const newId = response.id_responsable;
+                        cargarPersonasResponsable(newId);
+                        Swal.fire('¡Éxito!', 'Persona responsable creada correctamente', 'success');
+                    } else {
+                        Swal.fire('Error', response.message || 'Error al crear la persona responsable', 'error');
+                    }
+                }
+            });
+        }
     });
 
     // Inicialización primer item
@@ -749,7 +802,7 @@ function agregarItem() {
         width: '100%',
         dropdownParent: $(document.body),
         ajax: {
-            url: 'remisiones/ajax/buscar_productos.php',
+            url: 'ajax/buscar_productos.php',
             dataType: 'json',
             delay: 250,
             data: params => ({ termino: params.term }),
@@ -820,7 +873,7 @@ function limpiarFormulario() {
 
 function cargarPersonasContacto(clienteId) {
     $.ajax({
-        url: 'remisiones/ajax/obtener_personas_contacto.php',
+        url: 'ajax/obtener_personas_contacto.php',
         method: 'POST',
         data: { id_cliente: clienteId },
         dataType: 'json',
@@ -838,38 +891,35 @@ function cargarPersonasContacto(clienteId) {
     });
 }
 
-function cargarPersonasResponsable(clienteId, seleccionarId = null) {
+function cargarPersonasResponsable(seleccionarId = null) {
     $.ajax({
-        url: 'remisiones/ajax/obtener_personas_responsable.php',
-        method: 'POST',
-        data: { id_cliente: clienteId },
+        url: 'ajax/listar_todas_personas_responsables.php',
+        method: 'GET', // Cambiado a GET ya que no se envían datos
         dataType: 'json',
         success: function(personas) {
-            $('#persona_responsable').empty().append('<option value="">Seleccione...</option>');
+            const select = $('#persona_responsable');
+            select.empty().append('<option value="">Seleccione...</option>');
 
             if (Array.isArray(personas)) {
                 personas.forEach(function(persona) {
-                    const id = persona.id_persona || persona.id || persona.id_responsable;
-                    const nombre = persona.nombre_persona || persona.nombre || persona.nombre_responsable;
-
-                    const selectedAttr = (seleccionarId && seleccionarId == id) ? 'selected' : '';
-
-                    $('#persona_responsable').append(
-                        `<option value="${id}" ${selectedAttr}>${nombre}</option>`
-                    );
+                    const option = new Option(persona.nombre_responsable, persona.id_responsable);
+                    select.append(option);
                 });
             }
 
             if (seleccionarId) {
-                $('#persona_responsable').val(seleccionarId);
+                select.val(seleccionarId);
             }
+        },
+        error: function() {
+            console.error("Error al cargar las personas responsables.");
         }
     });
 }
 
 function cargarSiguienteNumero() {
     $.ajax({
-        url: 'remisiones/ajax/obtener_siguiente_numero.php',
+        url: 'ajax/obtener_siguiente_numero.php',
         method: 'GET',
         dataType: 'json',
         success: function(response) {
