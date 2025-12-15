@@ -4,7 +4,7 @@ require_once __DIR__ . '/../config/database.php';
 
 class MovimientoInventario {
     private $conn;
-    private $table_name = "historial_inventario";
+    private $table_name = "movimientos_inventario";
 
     public function __construct($db) {
         $this->conn = $db;

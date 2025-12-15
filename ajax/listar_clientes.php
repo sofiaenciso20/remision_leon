@@ -1,28 +1,26 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/Producto.php';
+require_once __DIR__ . '/../models/Cliente.php';
 
 header('Content-Type: application/json');
 
 $database = new Database();
 $db = $database->getConnection();
-$productoModel = new Producto($db);
+$clienteModel = new Cliente($db);
 
 $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
 $porPagina = 10;
 $offset = ($pagina - 1) * $porPagina;
 $termino = $_GET['termino'] ?? '';
-$filtroInventario = $_GET['inventario'] ?? 'todos';
-$filtroStock = $_GET['stock'] ?? 'todos';
 
 try {
-    $productos = $productoModel->obtenerProductosPaginados($termino, $filtroInventario, $filtroStock, $offset, $porPagina);
-    $total = $productoModel->contarProductos($termino, $filtroInventario, $filtroStock);
+    $clientes = $clienteModel->obtenerClientesPaginados($termino, $offset, $porPagina);
+    $total = $clienteModel->contarClientes($termino);
     $totalPaginas = ceil($total / $porPagina);
 
     echo json_encode([
         'success' => true,
-        'productos' => $productos,
+        'clientes' => $clientes,
         'paginacion' => [
             'pagina' => $pagina,
             'porPagina' => $porPagina,
