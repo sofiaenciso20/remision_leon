@@ -236,18 +236,47 @@ function cargarRemisionParaEditar(id) {
 
 function cargarPersonasContacto(clienteId, seleccionarId) {
     if (!clienteId) return;
+
+    // 1. Cargar la lista de personas para el cliente
     $.ajax({
-        url: 'ajax/obtener_personas_contacto.php',
+        url: 'ajax/obtener_personas_contacto.php', // El endpoint que devuelve la LISTA
         method: 'POST',
         data: { id_cliente: clienteId },
         dataType: 'json',
         success: function(personas) {
             const select = $('#persona_contacto');
             select.empty().append('<option value="">Seleccione...</option>');
+
+            let idEncontradoEnLista = false;
             if (Array.isArray(personas)) {
-                personas.forEach(p => select.append(new Option(p.nombre_persona, p.id_persona)));
+                personas.forEach(p => {
+                    select.append(new Option(p.nombre_persona, p.id_persona));
+                    if (p.id_persona == seleccionarId) {
+                        idEncontradoEnLista = true;
+                    }
+                });
             }
-            if (seleccionarId) select.val(seleccionarId);
+
+            // 2. Si el ID a seleccionar está en la lista, simplemente lo seleccionamos.
+            if (seleccionarId && idEncontradoEnLista) {
+                select.val(seleccionarId);
+            }
+            // 3. Si no está en la lista (caso raro, ej: contacto eliminado), lo cargamos por separado y lo añadimos.
+            else if (seleccionarId && !idEncontradoEnLista) {
+                $.ajax({
+                    url: 'ajax/obtener_persona_contacto.php',
+                    method: 'GET',
+                    data: { id: seleccionarId },
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.success) {
+                            const persona = response.data;
+                            const option = new Option(persona.nombre_persona, persona.id_persona, true, true);
+                            select.append(option).trigger('change');
+                        }
+                    }
+                });
+            }
         }
     });
 }

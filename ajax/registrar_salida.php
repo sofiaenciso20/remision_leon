@@ -6,46 +6,41 @@ require_once __DIR__ . '/../models/MovimientoInventario.php';
 
 header('Content-Type: application/json');
 
-try {
-    
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new Exception('Método no permitido');
-    }
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+    exit;
+}
 
+$id_producto = $_POST['id_producto'] ?? 0;
+$cantidad = $_POST['cantidad'] ?? 0;
+$observaciones = $_POST['observaciones'] ?? '';
+
+if (empty($id_producto) || empty($cantidad) || !is_numeric($cantidad) || $cantidad <= 0) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Datos inválidos']);
+    exit;
+}
+
+try {
     $database = new Database();
     $db = $database->getConnection();
 
-    $id_producto = isset($_POST['id_producto']) ? intval($_POST['id_producto']) : 0;
-    $cantidad = isset($_POST['cantidad']) ? intval($_POST['cantidad']) : 0;
-    $motivo = isset($_POST['motivo']) ? trim($_POST['motivo']) : 'ajuste_manual';
-    $observaciones = isset($_POST['observaciones']) ? trim($_POST['observaciones']) : null;
-
-    // Validaciones
-    if ($id_producto <= 0) {
-        throw new Exception('ID de producto no válido');
-    }
-
-    if ($cantidad <= 0) {
-        throw new Exception('La cantidad debe ser mayor a 0');
-    }
-
-    // Obtener producto actual
     $productoModel = new Producto($db);
+    $movimientoModel = new MovimientoInventario($db);
+
     $producto = $productoModel->obtenerPorId($id_producto);
-
     if (!$producto) {
-        throw new Exception('Producto no encontrado');
-    }
-
-    if (!$producto['maneja_inventario']) {
-        throw new Exception('Este producto no maneja inventario');
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Producto no encontrado']);
+        exit;
     }
 
     $stock_anterior = $producto['stock_actual'];
-    
-    // Validar que hay suficiente stock
     if ($cantidad > $stock_anterior) {
-        throw new Exception('No hay suficiente stock disponible. Stock actual: ' . $stock_anterior);
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'No hay suficiente stock para registrar la salida']);
+        exit;
     }
 
     $stock_nuevo = $stock_anterior - $cantidad;
@@ -53,44 +48,18 @@ try {
     // Iniciar transacción
     $db->beginTransaction();
 
-    try {
-        // Actualizar stock del producto
-        $productoModel->actualizarStock($id_producto, $stock_nuevo);
-
-        // Registrar movimiento
-        $movimientoModel = new MovimientoInventario($db);
-        $movimientoModel->id_producto = $id_producto;
-        $movimientoModel->tipo_movimiento = 'salida';
-        $movimientoModel->cantidad = $cantidad;
-        $movimientoModel->stock_anterior = $stock_anterior;
-        $movimientoModel->stock_nuevo = $stock_nuevo;
-        $movimientoModel->motivo = $motivo;
-        $movimientoModel->id_remision = null;
-        $movimientoModel->id_usuario = 1; // Usuario por defecto
-        $movimientoModel->observaciones = $observaciones;
-
-        if (!$movimientoModel->crear()) {
-            throw new Exception('Error al registrar el movimiento');
-        }
+    if ($productoModel->actualizarStock($id_producto, $stock_nuevo) &&
+        $movimientoModel->registrarMovimiento($id_producto, 'salida_manual', $cantidad, $stock_anterior, $stock_nuevo, null, $observaciones)) {
 
         $db->commit();
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Salida registrada correctamente',
-            'stock_nuevo' => $stock_nuevo
-        ]);
-
-    } catch (Exception $e) {
+        echo json_encode(['success' => true, 'message' => 'Salida registrada correctamente']);
+    } else {
         $db->rollBack();
-        throw $e;
+        throw new Exception('No se pudo completar la operación');
     }
 
 } catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
 }
 ?>

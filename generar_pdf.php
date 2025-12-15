@@ -49,84 +49,105 @@ class RemisionPDF extends FPDF {
         $x = 10;
         $y = 10;
         $w = $this->w - 20;
-        $h = 32;
-        $line_height = 4;
-        $font_size = 8;
+        $h = 22;
+        $line_height = 3.5;
+        $font_size = 7;
 
         // Borde exterior
         $this->Rect($x, $y, $w, $h);
 
         // --- COLUMNA IZQUIERDA: DATOS ---
-        $data_col_w = $w * 0.65;
+        $data_col_w = $w * 0.75;
         $this->Rect($x, $y, $data_col_w, $h);
 
         $this->SetFont('Arial', 'B', $font_size);
         $this->SetXY($x + 2, $y + 2);
 
-        // Fila 1
-        $this->Cell(20, $line_height, encode_text('REMISIÓN N°:'), 0, 0);
+        // Fila 1: Remisión
+        $this->Cell(18, $line_height, encode_text('REMISIÓN N°:'), 0, 0);
         $this->SetFont('Arial', '', $font_size);
         $this->Cell(30, $line_height, encode_text($this->datos['numero_remision']), 0, 1);
 
-        // Fila 2
+        // Fila 2: Fecha
         $this->SetX($x + 2);
         $this->SetFont('Arial', 'B', $font_size);
-        $this->Cell(20, $line_height, encode_text('FECHA:'), 0, 0);
+        $this->Cell(12, $line_height, encode_text('FECHA:'), 0, 0);
         $this->SetFont('Arial', '', $font_size);
-        $this->Cell(30, $line_height, date('d/m/Y', strtotime($this->datos['fecha_emision'])), 0, 1);
+        $this->Cell(30, $line_height, date('d/m/Y', strtotime($this->datos['fecha_emision'])), 0, 0);
 
-        // Fila 3
-        $this->SetX($x + 2);
+        // Tipo a la derecha de la fecha
+        $this->SetX($x + 50);
         $this->SetFont('Arial', 'B', $font_size);
-        $this->Cell(20, $line_height, encode_text('TIPO:'), 0, 0);
+        $this->Cell(12, $line_height, encode_text('TIPO:'), 0, 0);
         $this->SetFont('Arial', '', $font_size);
-        $this->Cell(30, $line_height, encode_text($this->datos['tipo_remision']), 0, 1);
+        $this->Cell(0, $line_height, encode_text($this->datos['tipo_remision']), 0, 1);
 
-        // Fila 4
+        // Fila 3: Cliente y NIT
         $this->SetX($x + 2);
         $this->SetFont('Arial', 'B', $font_size);
-        $this->Cell(20, $line_height, encode_text('CLIENTE:'), 0, 0);
+        $this->Cell(14, $line_height, encode_text('CLIENTE:'), 0, 0);
         $this->SetFont('Arial', '', $font_size);
-        $this->Cell(0, $line_height, encode_text($this->datos['nombre_cliente']), 0, 1);
+        $cliente_width = 85;
+        $this->Cell($cliente_width, $line_height, encode_text($this->datos['nombre_cliente']), 0, 0);
 
-        // Fila 5: Dirección y NIT
-        $current_y = $this->GetY();
-        $this->SetX($x + 2);
+        // NIT al lado derecho
+        $this->SetX($x + $cliente_width + 15);
         $this->SetFont('Arial', 'B', $font_size);
-        $this->Cell(20, $line_height, encode_text('DIRECCIÓN:'), 0, 0);
-        $this->SetFont('Arial', '', $font_size);
-        $this->Cell(60, $line_height, encode_text($this->datos['direccion']), 0, 0);
-        $this->SetFont('Arial', 'B', $font_size);
-        $this->Cell(10, $line_height, encode_text('NIT:'), 0, 0);
+        $this->Cell(8, $line_height, encode_text('NIT:'), 0, 0);
         $this->SetFont('Arial', '', $font_size);
         $this->Cell(0, $line_height, encode_text($this->datos['nit']), 0, 1);
 
-        // Fila 6: Teléfono
+        // Fila 4: Dirección y Teléfono del cliente
         $this->SetX($x + 2);
         $this->SetFont('Arial', 'B', $font_size);
-        $this->Cell(20, $line_height, encode_text('TELÉFONO:'), 0, 0);
+        $this->Cell(17, $line_height, encode_text('DIRECCIÓN:'), 0, 0);
+        $this->SetFont('Arial', '', $font_size);
+        $direccion_width = 85;
+        $this->Cell($direccion_width, $line_height, encode_text($this->datos['direccion']), 0, 0);
+
+        // Teléfono del cliente al lado derecho
+        $this->SetX($x + $direccion_width + 15);
+        $this->SetFont('Arial', 'B', $font_size);
+        $this->Cell(17, $line_height, encode_text('TELÉFONO:'), 0, 0);
         $this->SetFont('Arial', '', $font_size);
         $this->Cell(0, $line_height, encode_text($this->datos['telefono']), 0, 1);
 
-        // Fila 7: Recibe
+        // Fila 5: Recibe (persona) con su teléfono y Responsable con teléfono
         $this->SetX($x + 2);
         $this->SetFont('Arial', 'B', $font_size);
-        $this->Cell(20, $line_height, encode_text('RECIBE:'), 0, 0);
+        $this->Cell(15, $line_height, encode_text('RECIBE:'), 0, 0);
         $this->SetFont('Arial', '', $font_size);
-        $this->Cell(0, $line_height, encode_text($this->datos['nombre_persona']), 0, 1);
 
-        // Fila 8: Responsable
-        $this->SetX($x + 2);
+        // Texto para "RECIBE" incluyendo teléfono si está disponible
+        $recibe_text = encode_text($this->datos['nombre_persona']);
+        if (isset($this->datos['telefono_persona']) && !empty($this->datos['telefono_persona'])) {
+            $recibe_text .= " - " . encode_text($this->datos['telefono_persona']);
+        }
+
+        $recibe_width = 55;
+        $this->Cell($recibe_width, $line_height, $recibe_text, 0, 0);
+
+        // Responsable con teléfono al lado derecho
+        $this->SetX($x + $recibe_width + 15);
         $this->SetFont('Arial', 'B', $font_size);
-        $this->Cell(20, $line_height, encode_text('RESPONSABLE:'), 0, 0);
+        $this->Cell(22, $line_height, encode_text('RESPONSABLE:'), 0, 0);
         $this->SetFont('Arial', '', $font_size);
-        $this->Cell(0, $line_height, encode_text($this->datos['nombre_responsable']), 0, 1);
+        $responsable_text = encode_text($this->datos['nombre_responsable']);
+        if (isset($this->datos['telefono_responsable']) && !empty($this->datos['telefono_responsable'])) {
+            $responsable_text .= " - " . encode_text($this->datos['telefono_responsable']);
+        }
+        $this->Cell(0, $line_height, $responsable_text, 0, 1);
 
-
-        // --- COLUMNA DERECHA: LOGO ---
+        // --- COLUMNA DERECHA: LOGO PEQUEÑO ---
         $logo_col_x = $x + $data_col_w;
         $logo_col_w = $w - $data_col_w;
-        $this->Image('img/logo.png', $logo_col_x + 2, $y + 2, $logo_col_w - 4, $h - 4);
+
+        // Logo más pequeño: 12mm de altura
+        $logo_height = 12;
+        $logo_width = $logo_col_w - 4;
+        $logo_y = $y + (($h - $logo_height) / 2);
+
+        $this->Image('img/logo.png', $logo_col_x + 2, $logo_y, $logo_width, $logo_height);
 
         // Mover cursor para el contenido
         $this->Ln(5);
@@ -140,13 +161,13 @@ class RemisionPDF extends FPDF {
         $this->Rect(10, $y, $ancho, 32);
 
         $tercio = $ancho / 3;
-        $this->SetFont('Arial','',8);
+        $this->SetFont('Arial','',7);
 
         // 1️⃣ Firma Administrador
         $this->SetXY(10,$y+20);
         $this->Cell($tercio-5,4,'_________________________',0,1,'C');
         $this->SetX(10);
-        $this->SetFont('Arial','',7);
+        $this->SetFont('Arial','',6);
         $this->Cell($tercio-5,4, encode_text('Administrador'),0,0,'C');
 
         // 2️⃣ Firma Cliente
@@ -161,20 +182,20 @@ class RemisionPDF extends FPDF {
         $this->SetX(10+($tercio*2));
         $this->Cell($tercio-5,4, encode_text('Responsable'),0,1,'C');
 
-        // Nombre del responsable debajo de la firma
+        // Nombre y teléfono del responsable debajo de la firma
         if (isset($this->datos['nombre_responsable']) && !empty($this->datos['nombre_responsable'])) {
             $this->SetX(10+($tercio*2));
-            $this->SetFont('Arial','',7);
-            $this->Cell($tercio-5,4,
-                encode_text($this->datos['nombre_responsable']),
-            0,0,'C');
+            $this->SetFont('Arial','',6);
+            $responsable_text = encode_text($this->datos['nombre_responsable']);
+
+            $this->Cell($tercio-5,4, $responsable_text, 0,0,'C');
         }
     }
 }
 
 // CREAR PDF
 $pdf = new RemisionPDF($datos);
-$pdf->SetMargins(10, 45, 10); // Margen superior ajustado para el nuevo diseño
+$pdf->SetMargins(10, 35, 10); // Ajustado a 35 porque el cuadro es más pequeño (22mm)
 $pdf->SetAutoPageBreak(true, 45);
 $pdf->AddPage();
 
@@ -186,13 +207,13 @@ if (count($items) > 0) {
     $col4 = 25;
     $col2 = $ancho - ($col1 + $col3 + $col4);
 
-    $pdf->SetFont('Arial','B',9);
+    $pdf->SetFont('Arial','B',8);
     $pdf->Cell($col1,7, encode_text('CANT.'),1,0,'C');
     $pdf->Cell($col2,7, encode_text('DESCRIPCIÓN'),1,0,'C');
     $pdf->Cell($col3,7, encode_text('V. UNITARIO'),1,0,'C');
     $pdf->Cell($col4,7, encode_text('TOTAL'),1,1,'C');
 
-    $pdf->SetFont('Arial','',8);
+    $pdf->SetFont('Arial','',7);
     $total_general = 0;
 
     foreach ($items as $i) {
@@ -206,23 +227,24 @@ if (count($items) > 0) {
         $pdf->Cell($col4,6,"$ ".number_format($total,0,',','.'),1,1,'R');
     }
 
-    $pdf->SetFont('Arial','B',10);
+    $pdf->SetFont('Arial','B',9);
     $pdf->Cell($col1+$col2+$col3,7, encode_text('TOTAL GENERAL'),1,0,'R');
     $pdf->Cell($col4,7,"$ ".number_format($total_general,0,',','.'),1,1,'R');
 
 } else {
-    $pdf->SetFont('Arial','I',9);
+    $pdf->SetFont('Arial','I',8);
     $pdf->Cell(0,10, encode_text('No hay items en esta remisión'),0,1,'C');
 }
 
 // Observaciones
 $pdf->Ln(3);
 if (!empty($datos['observaciones'])) {
-    $pdf->SetFont('Arial','B',8);
+    $pdf->SetFont('Arial','B',7);
     $pdf->Cell(0,5, encode_text('OBSERVACIONES:'),0,1);
-    $pdf->SetFont('Arial','',7);
+    $pdf->SetFont('Arial','',6);
     $pdf->MultiCell(0,4, encode_text($datos['observaciones']),1,'L');
 }
 
-$pdf->Output('I', 'Remision_'.$datos['numero_remision'].'.pdf');
+// Output PDF
+$pdf->Output('I', 'remision_' . $datos['numero_remision'] . '.pdf');
 ?>

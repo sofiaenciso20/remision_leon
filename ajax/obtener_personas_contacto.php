@@ -8,14 +8,14 @@ if (isset($_POST['id_cliente'])) {
     try {
         $database = new Database();
         $db = $database->getConnection();
-        
+
         if (!$db) {
             throw new Exception('Error de conexión a la base de datos');
         }
-        
+
         $personaContacto = new PersonaContacto($db);
         $personas = $personaContacto->obtenerPorCliente($_POST['id_cliente']);
-        
+
         // Retornar array directo como esperan los otros endpoints del proyecto
         echo json_encode($personas);
     } catch (Exception $e) {

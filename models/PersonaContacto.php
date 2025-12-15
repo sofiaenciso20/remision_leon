@@ -57,6 +57,19 @@ class PersonaContacto {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function obtenerPorCliente($idCliente) {
+        $query = "SELECT id_persona, nombre_persona
+                  FROM " . $this->table_name . "
+                  WHERE id_cliente = :id_cliente
+                  ORDER BY nombre_persona";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id_cliente", $idCliente, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function actualizar() {
         $query = "UPDATE " . $this->table_name . "
                   SET nombre_persona = :nombre_persona,

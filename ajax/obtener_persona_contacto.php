@@ -9,7 +9,12 @@ $database = new Database();
 $db = $database->getConnection();
 $persona = new PersonaContacto($db);
 
-$id_persona = isset($_POST['id_persona']) ? (int)$_POST['id_persona'] : 0;
+$id_persona = 0;
+if (isset($_GET['id'])) {
+    $id_persona = (int)$_GET['id'];
+} elseif (isset($_POST['id_persona'])) {
+    $id_persona = (int)$_POST['id_persona'];
+}
 
 if ($id_persona <= 0) {
     echo json_encode(['success' => false, 'message' => 'ID de persona no válido.']);
