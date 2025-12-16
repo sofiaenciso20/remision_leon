@@ -6,21 +6,70 @@ class Remision {
     private $conn;
     private $table_name = "remisiones";
 
-    public $id_remision;
-    public $numero_remision;
-    public $tipo_remision;
-    public $fecha_emision;
-    public $id_cliente;
-    public $id_persona;
-    public $id_responsable;
-    public $id_usuario;
-    public $observaciones;
-    public $id_estado;
+    // ... (existing properties)
 
     public function __construct($db) {
         $this->conn = $db;
     }
 
+    private function construirCondiciones($termino, $fecha_creacion, $id_cliente, $id_persona) {
+        $condiciones = " FROM " . $this->table_name . " r
+                        LEFT JOIN clientes c ON r.id_cliente = c.id_cliente
+                        LEFT JOIN personas_contacto pc ON r.id_persona = pc.id_persona
+                        WHERE 1=1";
+        $params = [];
+
+        if (!empty($termino)) {
+            $condiciones .= " AND (r.numero_remision LIKE :termino OR c.nombre_cliente LIKE :termino OR c.nit LIKE :termino)";
+            $params[':termino'] = '%' . $termino . '%';
+        }
+        if (!empty($fecha_creacion)) {
+            $condiciones .= " AND DATE(r.fecha_emision) = :fecha_creacion";
+            $params[':fecha_creacion'] = $fecha_creacion;
+        }
+        if (!empty($id_cliente)) {
+            $condiciones .= " AND r.id_cliente = :id_cliente";
+            $params[':id_cliente'] = $id_cliente;
+        }
+        if (!empty($id_persona)) {
+            $condiciones .= " AND r.id_persona = :id_persona";
+            $params[':id_persona'] = $id_persona;
+        }
+
+        return ['condiciones' => $condiciones, 'params' => $params];
+    }
+
+    public function contarRemisiones($termino = '', $fecha_creacion = '', $id_cliente = '', $id_persona = '') {
+        $filtro = $this->construirCondiciones($termino, $fecha_creacion, $id_cliente, $id_persona);
+        $query = "SELECT COUNT(r.id_remision) as total " . $filtro['condiciones'];
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($filtro['params']);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return (int)$row['total'];
+    }
+
+    public function obtenerRemisionesPaginadas($termino = '', $fecha_creacion = '', $offset = 0, $limit = 10, $id_cliente = '', $id_persona = '') {
+        $filtro = $this->construirCondiciones($termino, $fecha_creacion, $id_cliente, $id_persona);
+
+        $query = "SELECT r.id_remision, r.numero_remision, r.fecha_emision, c.nombre_cliente, c.nit, pc.nombre_persona, pc.telefono AS telefono_persona" .
+                 $filtro['condiciones'] .
+                 " ORDER BY r.id_remision DESC LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->conn->prepare($query);
+
+        foreach ($filtro['params'] as $key => &$val) {
+            $stmt->bindParam($key, $val);
+        }
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // ... (all other existing methods like generarNumeroRemision, crear, obtenerPorIdConResponsable, etc., remain unchanged)
     public function generarNumeroRemision() {
         $query = "SELECT MAX(numero_remision) as ultimo_numero FROM " . $this->table_name;
         $stmt = $this->conn->prepare($query);
@@ -68,59 +117,6 @@ class Remision {
     $stmt->bindParam(":id", $id);
     $stmt->execute();
     return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    public function contarRemisiones($termino = '', $fecha = '') {
-        $query = "SELECT COUNT(r.id_remision) as total
-                  FROM " . $this->table_name . " r
-                  LEFT JOIN clientes c ON r.id_cliente = c.id_cliente
-                  WHERE 1=1";
-        $params = [];
-
-        if (!empty($termino)) {
-            $query .= " AND (r.numero_remision LIKE :termino OR c.nombre_cliente LIKE :termino OR c.nit LIKE :termino)";
-            $params[':termino'] = '%' . $termino . '%';
-        }
-        if (!empty($fecha)) {
-            $query .= " AND r.fecha_emision = :fecha";
-            $params[':fecha'] = $fecha;
-        }
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute($params);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return (int)$row['total'];
-    }
-
-    public function obtenerRemisionesPaginadas($termino = '', $fecha = '', $offset = 0, $limit = 10) {
-        $query = "SELECT r.id_remision, r.numero_remision, r.fecha_emision, c.nombre_cliente, c.nit, pc.nombre_persona
-                  FROM " . $this->table_name . " r
-                  LEFT JOIN clientes c ON r.id_cliente = c.id_cliente
-                  LEFT JOIN personas_contacto pc ON r.id_persona = pc.id_persona
-                  WHERE 1=1";
-        $params = [];
-
-        if (!empty($termino)) {
-            $query .= " AND (r.numero_remision LIKE :termino OR c.nombre_cliente LIKE :termino OR c.nit LIKE :termino)";
-            $params[':termino'] = "%{$termino}%";
-        }
-        if (!empty($fecha)) {
-            $query .= " AND r.fecha_emision = :fecha";
-            $params[':fecha'] = $fecha;
-        }
-
-        $query .= " ORDER BY r.id_remision DESC LIMIT :limit OFFSET :offset";
-
-        $stmt = $this->conn->prepare($query);
-
-        if (!empty($termino)) $stmt->bindValue(':termino', $params[':termino']);
-        if (!empty($fecha)) $stmt->bindValue(':fecha', $params[':fecha']);
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerPorId($id) {
