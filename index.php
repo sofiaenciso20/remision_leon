@@ -517,45 +517,52 @@ $(document).ready(function() {
     // Crear remisión con validación
     $('#formRemision').on('submit', function(e) {
         e.preventDefault();
-        const form = this;
 
-        // Validar campos principales del formulario
-        if (form.checkValidity() === false) {
-            e.stopPropagation();
-            $(form).addClass('was-validated');
-            // Quitar validación de select2 al seleccionar
-            $('#cliente').one('change', function() {
-                if ($(this).val()) {
-                    $(form).removeClass('was-validated');
+        let form = $(this);
+        let esValido = true;
+
+        // Limpiar validaciones previas
+        form.find('.is-invalid').removeClass('is-invalid');
+        $('.select2-container').css('border', '');
+
+        // 1. Validar campos de texto y select requeridos
+        form.find('input[required], select[required]').each(function() {
+            if (!$(this).val() || $(this).val().trim() === '') {
+                $(this).addClass('is-invalid');
+                esValido = false;
+
+                // Estilo especial para Select2
+                if ($(this).hasClass('select2-cliente')) {
+                    $(this).next('.select2-container').css({ 'border': '1px solid #dc3545', 'border-radius': '.25rem' });
                 }
-            });
-            return;
-        }
-        $(form).addClass('was-validated');
+            }
+        });
 
+        // 2. Validar que haya al menos un item
+        if ($('.item-row').length === 0) {
+            Swal.fire('Sin Items', 'Debe agregar al menos un item a la remisión.', 'warning');
+            esValido = false;
+        }
+
+        // 3. Validar cada item individualmente
         const items = [];
         let itemsValidos = true;
-
-        // Validar cada item
         $('.item-row').each(function() {
-            const descripcion = $(this).find('.descripcion').val();
-            const cantidad = $(this).find('.cantidad').val();
             const productoSelect = $(this).find('.select2-producto');
             const cantidadInput = $(this).find('.cantidad');
+            const descripcion = $(this).find('.descripcion').val();
+            const cantidad = cantidadInput.val();
 
-            // Resetear estilos de validación personalizados
-            productoSelect.next('.select2-container').css('border', '');
-            cantidadInput.removeClass('is-invalid');
-
-            if (!descripcion || !cantidad || parseInt(cantidad) < 1) {
+            if (!descripcion) {
+                productoSelect.next('.select2-container').css({ 'border': '1px solid #dc3545', 'border-radius': '.25rem' });
                 itemsValidos = false;
-                if (!descripcion) {
-                    productoSelect.next('.select2-container').css({ 'border': '1px solid #dc3545', 'border-radius': '.25rem' });
-                }
-                if (!cantidad || parseInt(cantidad) < 1) {
-                    cantidadInput.addClass('is-invalid');
-                }
-            } else {
+            }
+            if (!cantidad || parseInt(cantidad) < 1) {
+                cantidadInput.addClass('is-invalid');
+                itemsValidos = false;
+            }
+
+            if (descripcion && cantidad && parseInt(cantidad) >= 1) {
                 items.push({
                     id_producto: $(this).find('.id-producto').val() || null,
                     descripcion: descripcion,
@@ -565,16 +572,16 @@ $(document).ready(function() {
             }
         });
 
-        if (items.length === 0) {
-            Swal.fire('Advertencia', 'Debe agregar al menos un item a la remisión.', 'warning');
-            return;
-        }
-
         if (!itemsValidos) {
             Swal.fire('Items Incompletos', 'Cada item debe tener un producto y una cantidad válida.', 'error');
+            esValido = false;
+        }
+
+        if (!esValido) {
             return;
         }
 
+        // Si todo es válido, enviar
         const formData = new FormData(this);
         formData.append('items', JSON.stringify(items));
 
@@ -593,12 +600,7 @@ $(document).ready(function() {
                         icon: 'success',
                         showCancelButton: true,
                         confirmButtonText: 'Imprimir PDF',
-                        cancelButtonText: 'Crear Nueva',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                            cancelButton: 'btn btn-secondary'
-                        },
-                        buttonsStyling: false
+                        cancelButtonText: 'Crear Nueva'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             window.open(`generar_pdf.php?id=${response.id_remision}`, '_blank');
@@ -611,8 +613,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
-                console.log('Error AJAX crear_remision:', xhr.responseText);
-                Swal.fire('Error', 'Error al procesar la solicitud', 'error');
+                Swal.fire('Error', 'Error al procesar la solicitud: ' + xhr.responseText, 'error');
             }
         });
     });

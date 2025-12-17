@@ -76,11 +76,12 @@ include __DIR__ . '/views/layout/header.php';
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header bg-light"><h4 class="modal-title mb-0"><i class="fas fa-plus mr-2"></i> Crear Persona Responsable</h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>
-            <form id="formCrearPersonaResponsable">
+            <form id="formCrearPersonaResponsable" novalidate>
                 <div class="modal-body p-4">
                     <div class="form-group">
                         <label class="form-label" for="crear_nombre_responsable">Nombre *</label>
                         <input type="text" id="crear_nombre_responsable" name="nombre_responsable" class="form-control" required>
+                        <div class="invalid-feedback">Por favor, ingrese el nombre.</div>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="crear_telefono_responsable">Teléfono</label>
@@ -153,15 +154,33 @@ $(document).ready(function() {
 });
 
 function manejarSubmit(form, url, actionText) {
+    let $form = $(form);
+    let esValido = true;
+
+    // Limpiar validaciones previas
+    $form.find('.is-invalid').removeClass('is-invalid');
+
+    // Validar campos requeridos
+    $form.find('input[required]').each(function() {
+        if ($(this).val().trim() === '') {
+            $(this).addClass('is-invalid');
+            esValido = false;
+        }
+    });
+
+    if (!esValido) {
+        return;
+    }
+
     $.ajax({
         url: url,
         type: 'POST',
-        data: $(form).serialize(),
+        data: $form.serialize(),
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                $(form).closest('.modal').modal('hide');
-                $(form)[0].reset();
+                $form.closest('.modal').modal('hide');
+                $form[0].reset();
                 Swal.fire('¡Éxito!', `Persona responsable ${actionText} correctamente`, 'success');
                 const paginaActual = actionText === 'actualizada' ? ($('#paginacion-controles-personas-responsables .active .page-link').text() || 1) : 1;
                 cargarPersonasResponsables(paginaActual);

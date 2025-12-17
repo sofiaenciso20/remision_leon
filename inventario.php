@@ -124,7 +124,7 @@ include __DIR__ . '/views/layout/header.php';
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>
             <div class="modal-body">
-                <form id="formMovimiento">
+                <form id="formMovimiento" novalidate>
                     <input type="hidden" id="idProductoMovimiento" name="id_producto">
                     <p>Stock Actual: <strong id="stockActualLabel"></strong> unidades.</p>
                     <div class="form-group">
@@ -137,6 +137,7 @@ include __DIR__ . '/views/layout/header.php';
                     <div class="form-group">
                         <label for="cantidad">Cantidad</label>
                         <input type="number" class="form-control" id="cantidad" name="cantidad" required min="1">
+                        <div class="invalid-feedback">La cantidad debe ser un número positivo.</div>
                     </div>
                     <div class="form-group">
                         <label for="observaciones">Observaciones</label>
@@ -247,9 +248,22 @@ $(document).ready(function() {
 
     // Guardar movimiento (entrada/salida)
     $('#guardarMovimiento').on('click', function() {
+        const form = $('#formMovimiento');
+        const cantidadInput = $('#cantidad');
+        const cantidad = parseInt(cantidadInput.val());
+
+        // Limpiar validación previa
+        cantidadInput.removeClass('is-invalid');
+
+        // Validar cantidad
+        if (isNaN(cantidad) || cantidad <= 0) {
+            cantidadInput.addClass('is-invalid');
+            return;
+        }
+
         const tipo = $('#tipo_movimiento').val();
         const url = (tipo === 'entrada') ? 'ajax/registrar_entrada.php' : 'ajax/registrar_salida.php';
-        const data = $('#formMovimiento').serialize();
+        const data = form.serialize();
 
         $.ajax({
             url: url,

@@ -102,13 +102,14 @@ include __DIR__ . '/views/layout/header.php';
                 <h4 class="modal-title mb-0"><i class="fas fa-plus mr-2"></i> Crear Nueva Persona de Contacto</h4>
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
-            <form id="formCrearPersonaContacto">
+            <form id="formCrearPersonaContacto" novalidate>
                 <div class="modal-body p-4">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <div class="form-group">
                                 <label for="crear_nombre_persona" class="form-label">Nombre *</label>
                                 <input type="text" id="crear_nombre_persona" name="nombre_persona" class="form-control" required>
+                                <div class="invalid-feedback">Por favor, ingrese el nombre.</div>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -216,6 +217,7 @@ include __DIR__ . '/views/layout/header.php';
                                 <option value="<?php echo $clienteOpt['id_cliente']; ?>"><?php echo htmlspecialchars($clienteOpt['nombre_cliente']); ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <div class="invalid-feedback">Por favor, seleccione un cliente.</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -239,19 +241,41 @@ $(document).ready(function() {
 });
 
 function manejarSubmit(form, url, actionText) {
+    let $form = $(form);
+    let esValido = true;
+
+    // Limpiar validaciones previas
+    $form.find('.is-invalid').removeClass('is-invalid');
+
+    // Validar campos requeridos (input y select)
+    $form.find('input[required], select[required]').each(function() {
+        if ($(this).val().trim() === '') {
+            $(this).addClass('is-invalid');
+            esValido = false;
+        }
+    });
+
+    if (!esValido) {
+        return;
+    }
+
     $.ajax({
         url: url,
         type: 'POST',
-        data: $(form).serialize(),
+        data: $form.serialize(),
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                $(form).closest('.modal').modal('hide');
+                $form.closest('.modal').modal('hide');
                 Swal.fire('¡Éxito!', `Persona ${actionText} correctamente`, 'success');
                 cargarPersonas(actionText === 'actualizada' ? ($('#paginacion-controles-personas .active .page-link').text() || 1) : 1);
+                $form[0].reset();
             } else {
                 Swal.fire('Error', response.message || `No se pudo procesar la solicitud.`, 'error');
             }
+        },
+        error: function() {
+            Swal.fire('Error', 'Ocurrió un error de comunicación.', 'error');
         }
     });
 }
