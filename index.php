@@ -240,8 +240,8 @@ include 'views/layout/header.php';
                 </div>
 
                 <div class="card-footer bg-white py-3">
-                    <div class="d-flex flex-column flex-md-row justify-content-end">
-                        <button type="button" class="btn btn-outline-secondary mb-2 mb-md-0 mr-md-2" onclick="limpiarFormulario()">
+                    <div class="d-flex flex-column flex-md-row justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary" onclick="limpiarFormulario()">
                             <i class="fas fa-broom mr-1"></i> Limpiar
                         </button>
                         <button type="submit" class="btn btn-primary">

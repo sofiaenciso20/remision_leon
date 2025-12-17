@@ -40,33 +40,53 @@ include __DIR__ . '/views/layout/header.php';
             </div>
         </div>
 
-        <!-- Tabla -->
+        <!-- Tabla de personas de contacto -->
         <div class="card card-hover shadow-sm">
             <div class="card-header bg-white py-3">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                    <h4 class="card-title mb-2 mb-md-0"><i class="fas fa-list mr-2"></i> Personas Registradas</h4>
+                    <h4 class="card-title mb-2 mb-md-0">
+                        <i class="fas fa-list mr-2"></i> Personas de Contacto Registradas
+                    </h4>
+                    <!-- Buscador -->
                     <div class="input-group" style="max-width: 300px;">
                         <input type="text" id="buscador-personas" class="form-control" placeholder="Buscar por nombre o cliente...">
                         <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" onclick="cargarPersonas(1)"><i class="fas fa-search"></i></button>
+                            <button class="btn btn-outline-secondary" type="button" onclick="cargarPersonas(1)">
+                                <i class="fas fa-search"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="card-body p-0"><div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th><th>Nombre</th><th>Cargo</th><th>Teléfono</th><th>Correo</th><th>Cliente</th><th class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-personas-body"></tbody>
-                </table>
-            </div></div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="border-0">ID</th>
+                                <th class="border-0">Nombre</th>
+                                <th class="border-0">Cargo</th>
+                                <th class="border-0">Teléfono</th>
+                                <th class="border-0">Correo</th>
+                                <th class="border-0">Cliente</th>
+                                <th class="border-0 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-personas-body">
+                            <!-- Los datos se cargarán aquí vía AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             <div class="card-footer bg-white py-3">
+                <!-- Paginación -->
                 <div class="d-flex justify-content-between align-items-center">
                     <div id="info-paginacion-personas"></div>
-                    <nav><ul class="pagination mb-0" id="paginacion-controles-personas"></ul></nav>
+                    <nav>
+                        <ul class="pagination mb-0" id="paginacion-controles-personas">
+                            <!-- Los controles de paginación se generarán aquí -->
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -76,32 +96,55 @@ include __DIR__ . '/views/layout/header.php';
 <!-- Modales -->
 <!-- Modal Crear Persona -->
 <div class="modal fade" id="modalCrearPersonaContacto" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-light"><h4 class="modal-title mb-0"><i class="fas fa-plus mr-2"></i> Crear Persona</h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-header bg-light">
+                <h4 class="modal-title mb-0"><i class="fas fa-plus mr-2"></i> Crear Nueva Persona de Contacto</h4>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
             <form id="formCrearPersonaContacto">
                 <div class="modal-body p-4">
                     <div class="row">
-                        <div class="col-md-6 mb-3"><div class="form-group"><label>Nombre *</label><input type="text" name="nombre_persona" class="form-control" required></div></div>
-                        <div class="col-md-6 mb-3"><div class="form-group"><label>Cargo</label><input type="text" name="cargo" class="form-control"></div></div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label for="crear_nombre_persona" class="form-label">Nombre *</label>
+                                <input type="text" id="crear_nombre_persona" name="nombre_persona" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label for="crear_cargo" class="form-label">Cargo</label>
+                                <input type="text" id="crear_cargo" name="cargo" class="form-control">
+                            </div>
+                        </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3"><div class="form-group"><label>Teléfono</label><input type="text" name="telefono" class="form-control"></div></div>
-                        <div class="col-md-6 mb-3"><div class="form-group"><label>Correo</label><input type="email" name="correo" class="form-control"></div></div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label for="crear_telefono" class="form-label">Teléfono</label>
+                                <input type="text" id="crear_telefono" name="telefono" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label for="crear_correo" class="form-label">Correo</label>
+                                <input type="email" id="crear_correo" name="correo" class="form-control">
+                            </div>
+                        </div>
                     </div>
-                     <div class="form-group">
-                         <label>Cliente Asociado *</label>
-                         <select name="id_cliente" class="form-control" required>
+                    <div class="form-group">
+                        <label for="crear_id_cliente" class="form-label">Cliente Asociado *</label>
+                        <select id="crear_id_cliente" name="id_cliente" class="form-control" required>
                             <option value="">Seleccione...</option>
                             <?php foreach ($clientes as $clienteOpt): ?>
-                            <option value="<?php echo $clienteOpt['id_cliente']; ?>"><?php echo htmlspecialchars($clienteOpt['nombre_cliente']); ?></option>
+                                <option value="<?php echo $clienteOpt['id_cliente']; ?>"><?php echo htmlspecialchars($clienteOpt['nombre_cliente']); ?></option>
                             <?php endforeach; ?>
-                         </select>
-                     </div>
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-outline-secondary" data-dismiss="modal"><i class="fas fa-times mr-1"></i> Cancelar</button>
-                    <button type="submit" class="btn btn-success"><i class="fas fa-save mr-1"></i> Guardar</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-save mr-1"></i> Guardar Persona</button>
                 </div>
             </form>
         </div>
@@ -110,44 +153,78 @@ include __DIR__ . '/views/layout/header.php';
 
 <!-- Modal Ver Persona -->
 <div class="modal fade" id="modalVerPersonaContacto" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg"><div class="modal-content">
-        <div class="modal-header bg-light"><h4 class="modal-title mb-0"><i class="fas fa-eye mr-2"></i> Detalles</h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>
-        <div class="modal-body p-4" id="detalles-persona-body"></div>
-        <div class="modal-footer bg-light"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal"><i class="fas fa-times mr-1"></i> Cerrar</button></div>
-    </div></div>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h4 class="modal-title mb-0"><i class="fas fa-eye mr-2"></i> Detalles de la Persona</h4>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body p-4" id="detalles-persona-body">
+                <!-- Contenido cargado vía AJAX -->
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal"><i class="fas fa-times mr-1"></i> Cerrar</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal Editar Persona -->
 <div class="modal fade" id="modalEditarPersonaContacto" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg"><div class="modal-content">
-        <div class="modal-header bg-light"><h4 class="modal-title mb-0"><i class="fas fa-edit mr-2"></i> Editar Persona</h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>
-        <form id="formEditarPersonaContacto">
-            <input type="hidden" id="editar_id_persona" name="id_persona">
-            <div class="modal-body p-4">
-                 <div class="row">
-                    <div class="col-md-6 mb-3"><div class="form-group"><label>Nombre *</label><input type="text" id="editar_nombre_persona" name="nombre_persona" class="form-control" required></div></div>
-                    <div class="col-md-6 mb-3"><div class="form-group"><label>Cargo</label><input type="text" id="editar_cargo" name="cargo" class="form-control"></div></div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3"><div class="form-group"><label>Teléfono</label><input type="text" id="editar_telefono" name="telefono" class="form-control"></div></div>
-                    <div class="col-md-6 mb-3"><div class="form-group"><label>Correo</label><input type="email" id="editar_correo" name="correo" class="form-control"></div></div>
-                </div>
-                 <div class="form-group">
-                     <label>Cliente Asociado *</label>
-                     <select id="editar_id_cliente" name="id_cliente" class="form-control" required>
-                        <option value="">Seleccione...</option>
-                        <?php foreach ($clientes as $clienteOpt): ?>
-                        <option value="<?php echo $clienteOpt['id_cliente']; ?>"><?php echo htmlspecialchars($clienteOpt['nombre_cliente']); ?></option>
-                        <?php endforeach; ?>
-                     </select>
-                 </div>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h4 class="modal-title mb-0"><i class="fas fa-edit mr-2"></i> Editar Persona de Contacto</h4>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal"><i class="fas fa-times mr-1"></i> Cancelar</button>
-                <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Actualizar</button>
-            </div>
-        </form>
-    </div></div>
+            <form id="formEditarPersonaContacto">
+                <input type="hidden" id="editar_id_persona" name="id_persona">
+                <div class="modal-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label for="editar_nombre_persona" class="form-label">Nombre *</label>
+                                <input type="text" id="editar_nombre_persona" name="nombre_persona" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label for="editar_cargo" class="form-label">Cargo</label>
+                                <input type="text" id="editar_cargo" name="cargo" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label for="editar_telefono" class="form-label">Teléfono</label>
+                                <input type="text" id="editar_telefono" name="telefono" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label for="editar_correo" class="form-label">Correo</label>
+                                <input type="email" id="editar_correo" name="correo" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editar_id_cliente" class="form-label">Cliente Asociado *</label>
+                        <select id="editar_id_cliente" name="id_cliente" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            <?php foreach ($clientes as $clienteOpt): ?>
+                                <option value="<?php echo $clienteOpt['id_cliente']; ?>"><?php echo htmlspecialchars($clienteOpt['nombre_cliente']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal"><i class="fas fa-times mr-1"></i> Cancelar</button>
+                    <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Actualizar Persona</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 
