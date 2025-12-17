@@ -1,8 +1,3 @@
-<?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -49,20 +44,6 @@ if (session_status() == PHP_SESSION_NONE) {
                 <a class="nav-link" data-widget="pushmenu" href="#" role="button">
                     <i class="fas fa-bars"></i>
                 </a>
-            </li>
-        </ul>
-
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item dropdown">
-                <a class="nav-link" data-toggle="dropdown" href="#">
-                    <i class="fas fa-user"></i>
-                    <span class="d-none d-md-inline ml-1"><?php echo isset($_SESSION['usuario_nombre']) ? htmlspecialchars($_SESSION['usuario_nombre']) : 'Usuario'; ?></span>
-                </a>
-                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                    <a href="logout.php" class="dropdown-item">
-                        <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
-                    </a>
-                </div>
             </li>
         </ul>
     </nav>

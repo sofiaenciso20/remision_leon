@@ -5,14 +5,6 @@ require_once __DIR__ . '/../models/Producto.php';
 require_once __DIR__ . '/../models/MovimientoInventario.php';
 
 header('Content-Type: application/json');
-session_start();
-
-// Auth check
-if (!isset($_SESSION['usuario_id'])) {
-    http_response_code(401); // Unauthorized
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
 
 try {
 
@@ -27,7 +19,7 @@ try {
     $cantidad = isset($_POST['cantidad']) ? intval($_POST['cantidad']) : 0;
     $observaciones = isset($_POST['observaciones']) ? trim($_POST['observaciones']) : null;
     $motivo = 'ajuste_manual'; // Motivo explícito
-    $id_usuario = $_SESSION['usuario_id'];
+    $id_usuario = 1; // No hay sesión, se asigna un usuario por defecto
 
     // Validaciones
     if ($id_producto <= 0) {

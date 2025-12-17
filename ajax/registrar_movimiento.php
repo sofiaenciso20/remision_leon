@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once '../config/database.php';
 require_once '../models/Producto.php';
 require_once '../models/MovimientoInventario.php';
@@ -19,7 +18,7 @@ $tipo_movimiento = $_POST['tipo_movimiento'];
 $cantidad = intval($_POST['cantidad']);
 $motivo = $_POST['motivo'];
 $observaciones = $_POST['observaciones'];
-$id_usuario = $_SESSION['usuario']['id'] ?? 1; // Ajusta según tu sesión
+$id_usuario = 1; // No hay sesión, se asigna un usuario por defecto
 
 // Obtener producto actual
 $productoModel = new Producto($db);

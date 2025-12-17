@@ -1,19 +1,9 @@
 <?php
-session_start();
 require_once '../config/database.php';
 require_once '../models/Producto.php';
 require_once '../models/MovimientoInventario.php';
 
 header('Content-Type: application/json');
-
-// Verificar que el usuario esté autenticado
-if (!isset($_SESSION['usuario_id'])) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'No autorizado'
-    ]);
-    exit;
-}
 
 try {
     // Validar que se reciban los datos necesarios
@@ -27,7 +17,7 @@ try {
 
     $remision_id = intval($_POST['remision_id']);
     $productos = json_decode($_POST['productos'], true);
-    $usuario_id = $_SESSION['usuario_id'];
+    $usuario_id = 1; // No hay sesión, se asigna un usuario por defecto
 
     if (empty($productos)) {
         echo json_encode([
@@ -39,7 +29,7 @@ try {
 
     $database = new Database();
     $db = $database->getConnection();
-    
+
     $producto = new Producto($db);
     $movimiento = new MovimientoInventario($db);
 

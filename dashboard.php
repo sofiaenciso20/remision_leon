@@ -1,11 +1,4 @@
 <?php
-session_start();
-
-// Si el usuario no está autenticado, redirigir a la página de login
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit;
-}
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Cliente.php';
