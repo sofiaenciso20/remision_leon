@@ -1,6 +1,6 @@
 <?php
-require_once '../config/database.php';
-require_once '../models/MovimientoInventario.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/MovimientoInventario.php';
 
 header('Content-Type: text/html');
 
@@ -38,7 +38,7 @@ if (empty($movimientos)) {
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($movimientos as $movimiento): 
+            <?php foreach ($movimientos as $movimiento):
                 $badge_class = $movimiento['tipo_movimiento'] === 'entrada' ? 'bg-success' : 'bg-warning';
             ?>
             <tr>
@@ -51,7 +51,7 @@ if (empty($movimientos)) {
                 <td class="fw-bold"><?php echo $movimiento['cantidad']; ?></td>
                 <td><?php echo $movimiento['stock_anterior']; ?></td>
                 <td><?php echo $movimiento['stock_nuevo']; ?></td>
-                <td><?php echo ucfirst($movimiento['motivo']); ?></td>
+                <td><?php echo ucfirst(str_replace('_', ' ', $movimiento['motivo'])); ?></td>
                 <td><?php echo htmlspecialchars($movimiento['usuario_nombre'] ?? 'Sistema'); ?></td>
                 <td><?php echo htmlspecialchars($movimiento['observaciones'] ?? '-'); ?></td>
             </tr>

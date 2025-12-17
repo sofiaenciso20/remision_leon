@@ -5,9 +5,17 @@ require_once __DIR__ . '/../models/Producto.php';
 require_once __DIR__ . '/../models/MovimientoInventario.php';
 
 header('Content-Type: application/json');
+session_start();
+
+// Auth check
+if (!isset($_SESSION['usuario_id'])) {
+    http_response_code(401); // Unauthorized
+    echo json_encode(['success' => false, 'message' => 'No autorizado']);
+    exit;
+}
 
 try {
-    
+
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         throw new Exception('Método no permitido');
     }
@@ -17,8 +25,9 @@ try {
 
     $id_producto = isset($_POST['id_producto']) ? intval($_POST['id_producto']) : 0;
     $cantidad = isset($_POST['cantidad']) ? intval($_POST['cantidad']) : 0;
-    $motivo = isset($_POST['motivo']) ? trim($_POST['motivo']) : 'ajuste_manual';
     $observaciones = isset($_POST['observaciones']) ? trim($_POST['observaciones']) : null;
+    $motivo = 'ajuste_manual'; // Motivo explícito
+    $id_usuario = $_SESSION['usuario_id'];
 
     // Validaciones
     if ($id_producto <= 0) {
@@ -48,10 +57,10 @@ try {
     $db->beginTransaction();
 
     try {
-        // Actualizar stock del producto
+        // 1. Actualizar stock del producto
         $productoModel->actualizarStock($id_producto, $stock_nuevo);
 
-        // Registrar movimiento
+        // 2. Registrar movimiento
         $movimientoModel = new MovimientoInventario($db);
         $movimientoModel->id_producto = $id_producto;
         $movimientoModel->tipo_movimiento = 'entrada';
@@ -60,28 +69,28 @@ try {
         $movimientoModel->stock_nuevo = $stock_nuevo;
         $movimientoModel->motivo = $motivo;
         $movimientoModel->id_remision = null;
-        $movimientoModel->id_usuario = 1; // Usuario por defecto
+        $movimientoModel->id_usuario = $id_usuario;
         $movimientoModel->observaciones = $observaciones;
 
         if (!$movimientoModel->crear()) {
-            throw new Exception('Error al registrar el movimiento');
+            throw new Exception('Error al registrar el movimiento de inventario');
         }
 
         $db->commit();
 
         echo json_encode([
             'success' => true,
-            'message' => 'Entrada registrada correctamente',
+            'message' => 'Entrada de inventario registrada correctamente.',
             'stock_nuevo' => $stock_nuevo
         ]);
 
     } catch (Exception $e) {
         $db->rollBack();
-        throw $e;
+        throw $e; // Re-lanzar para el manejo de errores global
     }
 
 } catch (Exception $e) {
-    http_response_code(400);
+    http_response_code(400); // Bad Request
     echo json_encode([
         'success' => false,
         'message' => $e->getMessage()
