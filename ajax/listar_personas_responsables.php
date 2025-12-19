@@ -27,7 +27,9 @@ try {
         extract($row);
         $persona_item = [
             "id_responsable" => $id_responsable,
-            "nombre_responsable" => $nombre_responsable
+            "nombre_responsable" => $nombre_responsable,
+            "telefono" => $telefono,
+            "correo" => $correo
         ];
         array_push($personas_arr, $persona_item);
     }
