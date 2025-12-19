@@ -156,14 +156,21 @@ include __DIR__ . '/views/layout/header.php';
 
 <!-- 3. Modal de Historial -->
 <div class="modal fade" id="historialModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="historialModalLabel">Historial de Movimientos</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>
-            <div class="modal-body" id="historial-body">
-                <!-- Contenido cargado por AJAX -->
+            <div class="modal-body">
+                <div id="historial-body">
+                    <!-- Contenido de la tabla cargado por AJAX -->
+                </div>
+                <!-- Contenedor para la paginación -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div id="info-paginacion-historial"></div>
+                    <nav><ul class="pagination mb-0" id="paginacion-controles-historial"></ul></nav>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
@@ -298,29 +305,102 @@ $(document).ready(function() {
         });
     });
 
-    // Abrir modal de historial
+    // Abrir modal de historial - Inicia la carga de la primera página
     $('#tabla-inventario-body').on('click', '.btn-historial', function() {
         const id = $(this).data('id');
         const nombre = $(this).data('nombre');
 
+        // Guardar el ID del producto en el modal para reuso en paginación
+        $('#historialModal').data('id-producto', id);
         $('#historialModalLabel').text('Historial de: ' + nombre);
-        $('#historial-body').html('<div class="text-center"><div class="spinner-border"></div></div>');
 
-        $.ajax({
-            url: 'ajax/obtener_movimientos.php',
-            method: 'GET',
-            data: { id_producto: id },
-            success: function(response) {
-                $('#historial-body').html(response);
-            },
-            error: function() {
-                $('#historial-body').html('<div class="alert alert-danger">Error al cargar el historial.</div>');
-            }
-        });
+        cargarHistorial(id, 1); // Cargar la primera página
 
         $('#historialModal').modal('show');
     });
 });
+
+function cargarHistorial(id_producto, pagina) {
+    const body = $('#historial-body');
+    body.html('<div class="text-center"><div class="spinner-border text-primary"></div></div>');
+
+    $.ajax({
+        url: 'ajax/obtener_movimientos.php',
+        method: 'GET',
+        data: { id_producto: id_producto, pagina: pagina },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                const { movimientos, paginacion } = response;
+
+                let html = '<p class="text-muted">No hay movimientos registrados.</p>';
+                if (movimientos.length > 0) {
+                    html = `
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th><th>Tipo</th><th>Cantidad</th><th>Stock Ant.</th>
+                                        <th>Stock Nvo.</th><th>Motivo</th><th>Usuario</th><th>Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    movimientos.forEach(m => {
+                        const badge = m.tipo_movimiento === 'entrada' ? 'bg-success' : 'bg-warning';
+                        html += `
+                            <tr>
+                                <td>${new Date(m.fecha_movimiento).toLocaleDateString('es-CO')} ${new Date(m.fecha_movimiento).toLocaleTimeString('es-CO')}</td>
+                                <td><span class="badge ${badge}">${m.tipo_movimiento}</span></td>
+                                <td><strong>${m.cantidad}</strong></td>
+                                <td>${m.stock_anterior}</td>
+                                <td>${m.stock_nuevo}</td>
+                                <td>${m.motivo.replace('_', ' ')}</td>
+                                <td>${m.usuario_nombre || 'Sistema'}</td>
+                                <td>${m.observaciones || '-'}</td>
+                            </tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                }
+                body.html(html);
+                actualizarPaginacionHistorial(paginacion);
+            } else {
+                body.html(`<div class="alert alert-danger">${response.message}</div>`);
+            }
+        },
+        error: function() {
+            body.html('<div class="alert alert-danger">Error de comunicación al cargar el historial.</div>');
+        }
+    });
+}
+
+function actualizarPaginacionHistorial(paginacion) {
+    const { pagina_actual, total_paginas, total_registros } = paginacion;
+    const id_producto = $('#historialModal').data('id-producto');
+    const controles = $('#paginacion-controles-historial');
+    const info = $('#info-paginacion-historial');
+
+    controles.empty();
+    info.empty();
+
+    if (total_registros > 0) {
+        info.text(`Página ${pagina_actual} de ${total_paginas} (${total_registros} movimientos)`);
+
+        if (total_paginas > 1) {
+            let html = '';
+            const rango = 2;
+
+            html += `<li class="page-item ${pagina_actual <= 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="event.preventDefault(); cargarHistorial(${id_producto}, ${pagina_actual - 1});">Anterior</a></li>`;
+
+            for (let i = Math.max(1, pagina_actual - rango); i <= Math.min(total_paginas, pagina_actual + rango); i++) {
+                html += `<li class="page-item ${i === pagina_actual ? 'active' : ''}"><a class="page-link" href="#" onclick="event.preventDefault(); cargarHistorial(${id_producto}, ${i});">${i}</a></li>`;
+            }
+
+            html += `<li class="page-item ${pagina_actual >= total_paginas ? 'disabled' : ''}"><a class="page-link" href="#" onclick="event.preventDefault(); cargarHistorial(${id_producto}, ${pagina_actual + 1});">Siguiente</a></li>`;
+
+            controles.html(html);
+        }
+    }
+}
 
 function cargarInventario(pagina) {
     const busqueda = $('#buscarProducto').val();

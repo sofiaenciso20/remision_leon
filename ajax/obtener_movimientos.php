@@ -2,60 +2,45 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/MovimientoInventario.php';
 
-header('Content-Type: text/html');
+header('Content-Type: application/json');
 
+// Validar entrada
 if (!isset($_GET['id_producto'])) {
-    echo "<div class='alert alert-danger'>ID de producto no especificado</div>";
+    http_response_code(400); // Bad Request
+    echo json_encode(['success' => false, 'message' => 'ID de producto no especificado.']);
     exit();
 }
 
 $id_producto = intval($_GET['id_producto']);
+$pagina = isset($_GET['pagina']) ? intval($_GET['pagina']) : 1;
+$registros_por_pagina = 10;
+$offset = ($pagina - 1) * $registros_por_pagina;
 
-$database = new Database();
-$db = $database->getConnection();
+try {
+    $database = new Database();
+    $db = $database->getConnection();
+    $movimientoModel = new MovimientoInventario($db);
 
-$movimientoModel = new MovimientoInventario($db);
-$movimientos = $movimientoModel->obtenerPorProducto($id_producto);
+    // Obtener total y datos paginados
+    $total_movimientos = $movimientoModel->contarMovimientosPorProducto($id_producto);
+    $movimientos = $movimientoModel->obtenerMovimientosPaginadosPorProducto($id_producto, $offset, $registros_por_pagina);
+    $total_paginas = ceil($total_movimientos / $registros_por_pagina);
 
-if (empty($movimientos)) {
-    echo "<p class='text-muted'>No hay movimientos registrados para este producto.</p>";
-    exit();
+    echo json_encode([
+        'success' => true,
+        'movimientos' => $movimientos,
+        'paginacion' => [
+            'pagina_actual' => $pagina,
+            'total_paginas' => $total_paginas,
+            'total_registros' => $total_movimientos
+        ]
+    ]);
+
+} catch (Exception $e) {
+    http_response_code(500); // Internal Server Error
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error del servidor: ' . $e->getMessage()
+    ]);
 }
 ?>
-
-<div class="table-responsive">
-    <table class="table table-sm table-striped">
-        <thead class="table-light">
-            <tr>
-                <th>Fecha</th>
-                <th>Tipo</th>
-                <th>Cantidad</th>
-                <th>Stock Anterior</th>
-                <th>Stock Nuevo</th>
-                <th>Motivo</th>
-                <th>Usuario</th>
-                <th>Observaciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($movimientos as $movimiento):
-                $badge_class = $movimiento['tipo_movimiento'] === 'entrada' ? 'bg-success' : 'bg-warning';
-            ?>
-            <tr>
-                <td><?php echo date('d/m/Y H:i', strtotime($movimiento['fecha_movimiento'])); ?></td>
-                <td>
-                    <span class="badge <?php echo $badge_class; ?>">
-                        <?php echo ucfirst($movimiento['tipo_movimiento']); ?>
-                    </span>
-                </td>
-                <td class="fw-bold"><?php echo $movimiento['cantidad']; ?></td>
-                <td><?php echo $movimiento['stock_anterior']; ?></td>
-                <td><?php echo $movimiento['stock_nuevo']; ?></td>
-                <td><?php echo ucfirst(str_replace('_', ' ', $movimiento['motivo'])); ?></td>
-                <td><?php echo htmlspecialchars($movimiento['usuario_nombre'] ?? 'Sistema'); ?></td>
-                <td><?php echo htmlspecialchars($movimiento['observaciones'] ?? '-'); ?></td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
