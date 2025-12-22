@@ -497,6 +497,14 @@ $(document).ready(function() {
         }
     });
 
+    // Inicializar Select2 para personas
+    $('#persona_contacto, #persona_responsable').select2({
+        placeholder: 'Seleccione...',
+        allowClear: true,
+        width: '100%',
+        dropdownParent: $(document.body) // Evita que el dropdown sea cortado
+    });
+
     // Cargar personas responsables al inicio
     cargarPersonasResponsable();
 

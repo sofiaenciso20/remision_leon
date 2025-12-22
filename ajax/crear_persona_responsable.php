@@ -1,42 +1,45 @@
 <?php
-// ajax/crear_persona_responsable.php
-header('Content-Type: application/json');
-
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/PersonaResponsable.php';
 
-$database = new Database();
-$db = $database->getConnection();
+header("Content-Type: application/json");
 
-$persona = new PersonaResponsable($db);
-
-$nombre_responsable = isset($_POST['nombre_responsable']) ? $_POST['nombre_responsable'] : '';
-$telefono = isset($_POST['telefono']) ? $_POST['telefono'] : '';
-$correo = isset($_POST['correo']) ? $_POST['correo'] : '';
-
-// Asignar valores al objeto persona
-$persona->nombre_responsable = $nombre_responsable;
-$persona->telefono = $telefono;
-$persona->correo = $correo;
-
-if (empty($persona->nombre_responsable)) {
-    echo json_encode(['success' => false, 'message' => 'El nombre del responsable es obligatorio.']);
-    exit;
-}
+$response = ['success' => false, 'message' => 'Error desconocido.'];
 
 try {
-    if ($persona->crear()) {
-        echo json_encode([
-            'success' => true,
-            'id' => $persona->id_responsable,
-            'nombre_responsable' => $persona->nombre_responsable,
-            'telefono' => $persona->telefono,
-            'correo' => $persona->correo
-        ]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'No se pudo crear la persona responsable.']);
+    $db = (new Database())->getConnection();
+    $persona = new PersonaResponsable($db);
+
+    // --- Server-side validation ---
+    if (empty(trim($_POST['nombre_responsable']))) {
+        throw new Exception("El nombre de la persona responsable es obligatorio.");
     }
+    if (!empty(trim($_POST['correo'])) && !filter_var(trim($_POST['correo']), FILTER_VALIDATE_EMAIL)) {
+        throw new Exception("El formato del correo electrónico no es válido.");
+    }
+    // Asignar datos del POST al objeto
+    $persona->nombre_responsable = trim($_POST['nombre_responsable']);
+    $persona->correo = trim($_POST['correo']) ?: null;
+    $persona->telefono = trim($_POST['telefono']) ?: null;
+    $persona->id_cliente = !empty($_POST['id_cliente']) ? intval($_POST['id_cliente']) : null;
+
+
+    $new_id = $persona->crear();
+
+    if ($new_id) {
+        $response = [
+            'success' => true,
+            'message' => 'Persona responsable creada correctamente.',
+            'id_responsable' => $new_id
+        ];
+    } else {
+        throw new Exception("No se pudo crear la persona responsable.");
+    }
+
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    $response['message'] = $e->getMessage();
 }
+
+echo json_encode($response);
+
 ?>
