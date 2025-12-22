@@ -240,8 +240,8 @@ include 'views/layout/header.php';
                 </div>
 
                 <div class="card-footer bg-white py-3">
-                    <div class="d-flex flex-column flex-md-row justify-content-end gap-2">
-                        <button type="button" class="btn btn-outline-secondary" onclick="limpiarFormulario()">
+                    <div class="d-flex flex-column flex-md-row justify-content-end">
+                        <button type="button" class="btn btn-outline-secondary mb-2 mb-md-0 mr-md-2" onclick="limpiarFormulario()">
                             <i class="fas fa-broom mr-1"></i> Limpiar
                         </button>
                         <button type="submit" class="btn btn-primary">
@@ -341,7 +341,7 @@ include 'views/layout/header.php';
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="formPersonaContacto" novalidate>
+            <form id="formPersonaContacto" class="needs-validation" novalidate>
                 <div class="modal-body p-4">
                     <input type="hidden" id="cliente_persona_contacto" name="id_cliente">
 
@@ -369,7 +369,6 @@ include 'views/layout/header.php';
                     <div class="form-group mb-3">
                         <label for="correo_persona_contacto" class="form-label">Correo Electrónico</label>
                         <input type="email" class="form-control" id="correo_persona_contacto" name="correo">
-                        <div class="invalid-feedback">Por favor ingrese un correo electrónico válido.</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -397,7 +396,7 @@ include 'views/layout/header.php';
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="formPersonaResponsable" novalidate>
+            <form id="formPersonaResponsable" class="needs-validation" novalidate>
                 <div class="modal-body p-4">
 
                     <input type="hidden" id="cliente_persona_responsable" name="id_cliente">
@@ -411,7 +410,6 @@ include 'views/layout/header.php';
                     <div class="form-group mb-3">
                         <label for="correo_persona_responsable" class="form-label">Correo Electrónico</label>
                         <input type="email" class="form-control" id="correo_persona_responsable" name="correo">
-                        <div class="invalid-feedback">Por favor ingrese un correo electrónico válido.</div>
                     </div>
 
                     <div class="form-group mb-3">
@@ -497,14 +495,6 @@ $(document).ready(function() {
         }
     });
 
-    // Inicializar Select2 para personas
-    $('#persona_contacto, #persona_responsable').select2({
-        placeholder: 'Seleccione...',
-        allowClear: true,
-        width: '100%',
-        dropdownParent: $(document.body) // Evita que el dropdown sea cortado
-    });
-
     // Cargar personas responsables al inicio
     cargarPersonasResponsable();
 
@@ -527,52 +517,45 @@ $(document).ready(function() {
     // Crear remisión con validación
     $('#formRemision').on('submit', function(e) {
         e.preventDefault();
+        const form = this;
 
-        let form = $(this);
-        let esValido = true;
-
-        // Limpiar validaciones previas
-        form.find('.is-invalid').removeClass('is-invalid');
-        $('.select2-container').css('border', '');
-
-        // 1. Validar campos de texto y select requeridos
-        form.find('input[required], select[required]').each(function() {
-            if (!$(this).val() || $(this).val().trim() === '') {
-                $(this).addClass('is-invalid');
-                esValido = false;
-
-                // Estilo especial para Select2
-                if ($(this).hasClass('select2-cliente')) {
-                    $(this).next('.select2-container').css({ 'border': '1px solid #dc3545', 'border-radius': '.25rem' });
+        // Validar campos principales del formulario
+        if (form.checkValidity() === false) {
+            e.stopPropagation();
+            $(form).addClass('was-validated');
+            // Quitar validación de select2 al seleccionar
+            $('#cliente').one('change', function() {
+                if ($(this).val()) {
+                    $(form).removeClass('was-validated');
                 }
-            }
-        });
-
-        // 2. Validar que haya al menos un item
-        if ($('.item-row').length === 0) {
-            Swal.fire('Sin Items', 'Debe agregar al menos un item a la remisión.', 'warning');
-            esValido = false;
+            });
+            return;
         }
+        $(form).addClass('was-validated');
 
-        // 3. Validar cada item individualmente
         const items = [];
         let itemsValidos = true;
+
+        // Validar cada item
         $('.item-row').each(function() {
+            const descripcion = $(this).find('.descripcion').val();
+            const cantidad = $(this).find('.cantidad').val();
             const productoSelect = $(this).find('.select2-producto');
             const cantidadInput = $(this).find('.cantidad');
-            const descripcion = $(this).find('.descripcion').val();
-            const cantidad = cantidadInput.val();
 
-            if (!descripcion) {
-                productoSelect.next('.select2-container').css({ 'border': '1px solid #dc3545', 'border-radius': '.25rem' });
-                itemsValidos = false;
-            }
-            if (!cantidad || parseInt(cantidad) < 1) {
-                cantidadInput.addClass('is-invalid');
-                itemsValidos = false;
-            }
+            // Resetear estilos de validación personalizados
+            productoSelect.next('.select2-container').css('border', '');
+            cantidadInput.removeClass('is-invalid');
 
-            if (descripcion && cantidad && parseInt(cantidad) >= 1) {
+            if (!descripcion || !cantidad || parseInt(cantidad) < 1) {
+                itemsValidos = false;
+                if (!descripcion) {
+                    productoSelect.next('.select2-container').css({ 'border': '1px solid #dc3545', 'border-radius': '.25rem' });
+                }
+                if (!cantidad || parseInt(cantidad) < 1) {
+                    cantidadInput.addClass('is-invalid');
+                }
+            } else {
                 items.push({
                     id_producto: $(this).find('.id-producto').val() || null,
                     descripcion: descripcion,
@@ -582,16 +565,16 @@ $(document).ready(function() {
             }
         });
 
-        if (!itemsValidos) {
-            Swal.fire('Items Incompletos', 'Cada item debe tener un producto y una cantidad válida.', 'error');
-            esValido = false;
-        }
-
-        if (!esValido) {
+        if (items.length === 0) {
+            Swal.fire('Advertencia', 'Debe agregar al menos un item a la remisión.', 'warning');
             return;
         }
 
-        // Si todo es válido, enviar
+        if (!itemsValidos) {
+            Swal.fire('Items Incompletos', 'Cada item debe tener un producto y una cantidad válida.', 'error');
+            return;
+        }
+
         const formData = new FormData(this);
         formData.append('items', JSON.stringify(items));
 
@@ -610,7 +593,12 @@ $(document).ready(function() {
                         icon: 'success',
                         showCancelButton: true,
                         confirmButtonText: 'Imprimir PDF',
-                        cancelButtonText: 'Crear Nueva'
+                        cancelButtonText: 'Crear Nueva',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                            cancelButton: 'btn btn-secondary'
+                        },
+                        buttonsStyling: false
                     }).then((result) => {
                         if (result.isConfirmed) {
                             window.open(`generar_pdf.php?id=${response.id_remision}`, '_blank');
@@ -623,7 +611,8 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
-                Swal.fire('Error', 'Error al procesar la solicitud: ' + xhr.responseText, 'error');
+                console.log('Error AJAX crear_remision:', xhr.responseText);
+                Swal.fire('Error', 'Error al procesar la solicitud', 'error');
             }
         });
     });
@@ -690,28 +679,8 @@ $(document).ready(function() {
 
     // AJAX submission for Persona Contacto
     $('#formPersonaContacto').on('submit', function(e) {
-        e.preventDefault();
-        let esValido = true;
-
-        // Limpiar validaciones previas
-        $(this).find('.is-invalid').removeClass('is-invalid');
-
-        // Validar nombre
-        const nombre = $('#nombre_persona_contacto');
-        if (!nombre.val().trim()) {
-            nombre.addClass('is-invalid');
-            esValido = false;
-        }
-
-        // Validar correo
-        const correo = $('#correo_persona_contacto');
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (correo.val().trim() && !emailRegex.test(correo.val().trim())) {
-            correo.addClass('is-invalid');
-            esValido = false;
-        }
-
-        if (esValido) {
+        if (this.checkValidity()) {
+            e.preventDefault();
             $.ajax({
                 url: 'ajax/crear_persona_contacto.php',
                 method: 'POST',
@@ -720,51 +689,24 @@ $(document).ready(function() {
                 success: function(response) {
                     if (response.success) {
                         $('#modalPersonaContacto').modal('hide');
-                        $('#formPersonaContacto')[0].reset();
-                        $(this).find('.is-invalid').removeClass('is-invalid');
-
+                        $('#formPersonaContacto').removeClass('was-validated')[0].reset();
                         const nuevaPersona = response.persona || response.data;
                         const clienteId = $('#cliente').val();
-
-                        // Recargar y seleccionar la nueva persona
-                        cargarPersonasContacto(clienteId, nuevaPersona.id_persona);
-
+                        cargarPersonasContacto(clienteId);
+                        $('#persona_contacto').val(nuevaPersona.id_persona);
                         Swal.fire('¡Éxito!', 'Persona creada correctamente', 'success');
                     } else {
                         Swal.fire('Error', response.message || 'Error al crear la persona', 'error');
                     }
-                },
-                error: function() {
-                    Swal.fire('Error', 'Error de comunicación al crear la persona.', 'error');
                 }
             });
         }
     });
 
-    // AJAX submission for Persona Responsable with manual validation
+    // AJAX submission for Persona Responsable
     $('#formPersonaResponsable').on('submit', function(e) {
-        e.preventDefault();
-        let esValido = true;
-
-        // Limpiar validaciones previas
-        $(this).find('.is-invalid').removeClass('is-invalid');
-
-        // Validar nombre
-        const nombre = $('#nombre_persona_responsable');
-        if (!nombre.val().trim()) {
-            nombre.addClass('is-invalid');
-            esValido = false;
-        }
-
-        // Validar correo electrónico
-        const correo = $('#correo_persona_responsable');
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (correo.val().trim() && !emailRegex.test(correo.val().trim())) {
-            correo.addClass('is-invalid');
-            esValido = false;
-        }
-
-        if (esValido) {
+        if (this.checkValidity()) {
+            e.preventDefault();
             $.ajax({
                 url: 'ajax/crear_persona_responsable.php',
                 method: 'POST',
@@ -773,18 +715,13 @@ $(document).ready(function() {
                 success: function(response) {
                     if (response.success) {
                         $('#modalPersonaResponsable').modal('hide');
-                        $('#formPersonaResponsable')[0].reset();
-                        $(this).find('.is-invalid').removeClass('is-invalid'); // Limpiar al éxito
-
-                        const newId = response.id_responsable || response.data?.id_responsable;
-                        cargarPersonasResponsable(newId); // Recargar y seleccionar el nuevo
+                        $('#formPersonaResponsable').removeClass('was-validated')[0].reset();
+                        const newId = response.id_responsable;
+                        cargarPersonasResponsable(newId);
                         Swal.fire('¡Éxito!', 'Persona responsable creada correctamente', 'success');
                     } else {
                         Swal.fire('Error', response.message || 'Error al crear la persona responsable', 'error');
                     }
-                },
-                error: function() {
-                    Swal.fire('Error', 'Error de comunicación al crear la persona.', 'error');
                 }
             });
         }
@@ -934,26 +871,21 @@ function limpiarFormulario() {
     cargarSiguienteNumero();
 }
 
-function cargarPersonasContacto(clienteId, seleccionarId = null) {
+function cargarPersonasContacto(clienteId) {
     $.ajax({
         url: 'ajax/obtener_personas_contacto.php',
         method: 'POST',
         data: { id_cliente: clienteId },
         dataType: 'json',
         success: function(personas) {
-            const select = $('#persona_contacto');
-            select.empty().append('<option value="">Seleccione...</option>');
+            $('#persona_contacto').empty().append('<option value="">Seleccione...</option>');
 
             if (Array.isArray(personas)) {
                 personas.forEach(function(persona) {
-                    select.append(
+                    $('#persona_contacto').append(
                         `<option value="${persona.id_persona}">${persona.nombre_persona}</option>`
                     );
                 });
-            }
-
-            if (seleccionarId) {
-                select.val(seleccionarId);
             }
         }
     });
