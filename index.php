@@ -397,7 +397,7 @@ include 'views/layout/header.php';
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="formPersonaResponsable" class="needs-validation" novalidate>
+            <form id="formPersonaResponsable" novalidate>
                 <div class="modal-body p-4">
 
                     <input type="hidden" id="cliente_persona_responsable" name="id_cliente">
@@ -411,6 +411,7 @@ include 'views/layout/header.php';
                     <div class="form-group mb-3">
                         <label for="correo_persona_responsable" class="form-label">Correo Electrónico</label>
                         <input type="email" class="form-control" id="correo_persona_responsable" name="correo">
+                        <div class="invalid-feedback">Por favor ingrese un correo electrónico válido.</div>
                     </div>
 
                     <div class="form-group mb-3">
@@ -732,10 +733,30 @@ $(document).ready(function() {
         }
     });
 
-    // AJAX submission for Persona Responsable
+    // AJAX submission for Persona Responsable with manual validation
     $('#formPersonaResponsable').on('submit', function(e) {
-        if (this.checkValidity()) {
-            e.preventDefault();
+        e.preventDefault();
+        let esValido = true;
+
+        // Limpiar validaciones previas
+        $(this).find('.is-invalid').removeClass('is-invalid');
+
+        // Validar nombre
+        const nombre = $('#nombre_persona_responsable');
+        if (!nombre.val().trim()) {
+            nombre.addClass('is-invalid');
+            esValido = false;
+        }
+
+        // Validar correo electrónico
+        const correo = $('#correo_persona_responsable');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (correo.val().trim() && !emailRegex.test(correo.val().trim())) {
+            correo.addClass('is-invalid');
+            esValido = false;
+        }
+
+        if (esValido) {
             $.ajax({
                 url: 'ajax/crear_persona_responsable.php',
                 method: 'POST',
@@ -744,13 +765,18 @@ $(document).ready(function() {
                 success: function(response) {
                     if (response.success) {
                         $('#modalPersonaResponsable').modal('hide');
-                        $('#formPersonaResponsable').removeClass('was-validated')[0].reset();
-                        const newId = response.id_responsable;
-                        cargarPersonasResponsable(newId);
+                        $('#formPersonaResponsable')[0].reset();
+                        $(this).find('.is-invalid').removeClass('is-invalid'); // Limpiar al éxito
+
+                        const newId = response.id_responsable || response.data?.id_responsable;
+                        cargarPersonasResponsable(newId); // Recargar y seleccionar el nuevo
                         Swal.fire('¡Éxito!', 'Persona responsable creada correctamente', 'success');
                     } else {
                         Swal.fire('Error', response.message || 'Error al crear la persona responsable', 'error');
                     }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Error de comunicación al crear la persona.', 'error');
                 }
             });
         }
