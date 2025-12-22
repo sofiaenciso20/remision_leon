@@ -90,6 +90,7 @@ include __DIR__ . '/views/layout/header.php';
                     <div class="form-group">
                         <label class="form-label" for="crear_correo_responsable">Correo</label>
                         <input type="email" id="crear_correo_responsable" name="correo" class="form-control">
+                        <div class="invalid-feedback">Por favor, ingrese un correo electrónico válido.</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -131,6 +132,7 @@ include __DIR__ . '/views/layout/header.php';
                     <div class="form-group">
                         <label class="form-label" for="editar_correo_responsable">Correo</label>
                         <input type="email" id="editar_correo_responsable" name="correo" class="form-control">
+                        <div class="invalid-feedback">Por favor, ingrese un correo electrónico válido.</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -167,6 +169,17 @@ function manejarSubmit(form, url, actionText) {
             esValido = false;
         }
     });
+
+    // Validar correo electrónico
+    const correoInput = $form.find('input[type="email"]');
+    if (correoInput.length > 0) {
+        const correo = correoInput.val().trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (correo && !emailRegex.test(correo)) {
+            correoInput.addClass('is-invalid');
+            esValido = false;
+        }
+    }
 
     if (!esValido) {
         return;

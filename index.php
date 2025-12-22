@@ -341,7 +341,7 @@ include 'views/layout/header.php';
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="formPersonaContacto" class="needs-validation" novalidate>
+            <form id="formPersonaContacto" novalidate>
                 <div class="modal-body p-4">
                     <input type="hidden" id="cliente_persona_contacto" name="id_cliente">
 
@@ -369,6 +369,7 @@ include 'views/layout/header.php';
                     <div class="form-group mb-3">
                         <label for="correo_persona_contacto" class="form-label">Correo Electrónico</label>
                         <input type="email" class="form-control" id="correo_persona_contacto" name="correo">
+                        <div class="invalid-feedback">Por favor ingrese un correo electrónico válido.</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -680,8 +681,28 @@ $(document).ready(function() {
 
     // AJAX submission for Persona Contacto
     $('#formPersonaContacto').on('submit', function(e) {
-        if (this.checkValidity()) {
-            e.preventDefault();
+        e.preventDefault();
+        let esValido = true;
+
+        // Limpiar validaciones previas
+        $(this).find('.is-invalid').removeClass('is-invalid');
+
+        // Validar nombre
+        const nombre = $('#nombre_persona_contacto');
+        if (!nombre.val().trim()) {
+            nombre.addClass('is-invalid');
+            esValido = false;
+        }
+
+        // Validar correo
+        const correo = $('#correo_persona_contacto');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (correo.val().trim() && !emailRegex.test(correo.val().trim())) {
+            correo.addClass('is-invalid');
+            esValido = false;
+        }
+
+        if (esValido) {
             $.ajax({
                 url: 'ajax/crear_persona_contacto.php',
                 method: 'POST',
@@ -690,15 +711,22 @@ $(document).ready(function() {
                 success: function(response) {
                     if (response.success) {
                         $('#modalPersonaContacto').modal('hide');
-                        $('#formPersonaContacto').removeClass('was-validated')[0].reset();
+                        $('#formPersonaContacto')[0].reset();
+                        $(this).find('.is-invalid').removeClass('is-invalid');
+
                         const nuevaPersona = response.persona || response.data;
                         const clienteId = $('#cliente').val();
-                        cargarPersonasContacto(clienteId);
-                        $('#persona_contacto').val(nuevaPersona.id_persona);
+
+                        // Recargar y seleccionar la nueva persona
+                        cargarPersonasContacto(clienteId, nuevaPersona.id_persona);
+
                         Swal.fire('¡Éxito!', 'Persona creada correctamente', 'success');
                     } else {
                         Swal.fire('Error', response.message || 'Error al crear la persona', 'error');
                     }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Error de comunicación al crear la persona.', 'error');
                 }
             });
         }
@@ -872,21 +900,26 @@ function limpiarFormulario() {
     cargarSiguienteNumero();
 }
 
-function cargarPersonasContacto(clienteId) {
+function cargarPersonasContacto(clienteId, seleccionarId = null) {
     $.ajax({
         url: 'ajax/obtener_personas_contacto.php',
         method: 'POST',
         data: { id_cliente: clienteId },
         dataType: 'json',
         success: function(personas) {
-            $('#persona_contacto').empty().append('<option value="">Seleccione...</option>');
+            const select = $('#persona_contacto');
+            select.empty().append('<option value="">Seleccione...</option>');
 
             if (Array.isArray(personas)) {
                 personas.forEach(function(persona) {
-                    $('#persona_contacto').append(
+                    select.append(
                         `<option value="${persona.id_persona}">${persona.nombre_persona}</option>`
                     );
                 });
+            }
+
+            if (seleccionarId) {
+                select.val(seleccionarId);
             }
         }
     });
