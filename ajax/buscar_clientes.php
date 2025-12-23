@@ -42,7 +42,7 @@ try {
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $results[] = [
             'id' => $row['id_cliente'],
-            'text' => $row['nombre_cliente'] . (empty($row['nit']) ? '' : ' (' . $row['nit'] . ')'),
+            'text' => $row['nombre_cliente'],
             'nit' => $row['nit'],
             'nombre' => $row['nombre_cliente']
         ];
