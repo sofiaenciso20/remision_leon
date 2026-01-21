@@ -1,39 +1,49 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/PersonaContacto.php';
+
 header("Content-Type: application/json");
 
-$db = (new Database())->getConnection();
+$response = ['success' => false, 'message' => 'Error desconocido.'];
 
 try {
-    $nombre = trim($_POST["nombre_persona"]);
-    $cargo = trim($_POST["cargo"]);
-    $telefono = trim($_POST["telefono"]);
-    $correo = trim($_POST["correo"]);
-    $id_cliente = intval($_POST["id_cliente"]);
+    $db = (new Database())->getConnection();
+    $personaContacto = new PersonaContacto($db);
 
-    if ($id_cliente <= 0) {
-        throw new Exception("Cliente inválido");
+    // --- Server-side validation ---
+    if (empty(trim($_POST['nombre_persona']))) {
+        throw new Exception("El nombre de la persona es obligatorio.");
+    }
+    if (empty($_POST['id_cliente']) || !is_numeric($_POST['id_cliente'])) {
+        throw new Exception("El cliente asociado no es válido.");
+    }
+     if (!empty(trim($_POST['correo'])) && !filter_var(trim($_POST['correo']), FILTER_VALIDATE_EMAIL)) {
+        throw new Exception("El formato del correo electrónico no es válido.");
     }
 
-    $sql = "INSERT INTO personas_contacto(nombre_persona, cargo, telefono, correo, id_cliente)
-            VALUES(:nombre, :cargo, :telefono, :correo, :id_cliente)";
-    $stmt = $db->prepare($sql);
-    $stmt->execute([
-        ':nombre' => $nombre,
-        ':cargo' => $cargo,
-        ':telefono' => $telefono,
-        ':correo' => $correo,
-        ':id_cliente' => $id_cliente
-    ]);
+    // Asignar datos del POST al objeto
+    $personaContacto->nombre_persona = trim($_POST["nombre_persona"]);
+    $personaContacto->cargo = trim($_POST["cargo"]) ?: null;
+    $personaContacto->telefono = trim($_POST["telefono"]) ?: null;
+    $personaContacto->correo = trim($_POST["correo"]) ?: null;
+    $personaContacto->id_cliente = intval($_POST["id_cliente"]);
 
-    echo json_encode([
-        "success" => true,
-        "message" => "Persona de contacto creada correctamente"
-    ]);
+    $nuevoId = $personaContacto->crear();
+
+    if ($nuevoId) {
+        $nuevaPersona = $personaContacto->obtenerPorId($nuevoId);
+        $response = [
+            "success" => true,
+            "message" => "Persona de contacto creada correctamente",
+            "data" => $nuevaPersona
+        ];
+    } else {
+        throw new Exception("No se pudo crear la persona de contacto.");
+    }
+
 } catch (Exception $e) {
-    echo json_encode([
-        "success" => false,
-        "message" => $e->getMessage()
-    ]);
+    $response['message'] = $e->getMessage();
 }
+
+echo json_encode($response);
 ?>

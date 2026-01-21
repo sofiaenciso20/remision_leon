@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 require_once 'config/database.php';
 require_once 'models/Cliente.php';
 require_once 'models/Remision.php';
@@ -29,6 +31,7 @@ $personaContacto = new PersonaContacto($db);
 $producto = new Producto($db);
 
 $siguiente_numero = $remision->generarNumeroRemision();
+$todos_los_productos = $producto->obtenerTodos(); // Cargar todos los productos
 
 include 'views/layout/header.php';
 ?>
@@ -48,7 +51,16 @@ include 'views/layout/header.php';
 .select-group {
     display: flex;
     gap: 8px;
-    align-items: flex-start;
+    align-items: center; /* Centrar verticalmente */
+}
+.select-group .form-control,
+.select-group .select2-container .select2-selection--single,
+.select-group .btn {
+    height: calc(2.25rem + 2px); /* Altura consistente para todos los elementos */
+}
+.select-group .select2-container .select2-selection--single {
+    display: flex;
+    align-items: center; /* Centrar el texto en Select2 */
 }
 .select-group .form-control {
     flex: 1;
@@ -467,6 +479,9 @@ include 'views/layout/header.php';
 </div>
 
 <script>
+// Hacer la lista de productos accesible en JavaScript
+const todosLosProductos = <?php echo json_encode($todos_los_productos); ?>;
+
 $(document).ready(function() {
     cargarSiguienteNumero();
 
@@ -538,26 +553,27 @@ $(document).ready(function() {
 
         // Validar cada item
         $('.item-row').each(function() {
+            const idProducto = $(this).find('.id-producto').val();
             const descripcion = $(this).find('.descripcion').val();
             const cantidad = $(this).find('.cantidad').val();
-            const productoSelect = $(this).find('.select2-producto');
+            const productoSelect = $(this).find('.producto-select');
             const cantidadInput = $(this).find('.cantidad');
 
-            // Resetear estilos de validación personalizados
-            productoSelect.next('.select2-container').css('border', '');
+            // Resetear estilos de validación
+            productoSelect.removeClass('is-invalid');
             cantidadInput.removeClass('is-invalid');
 
-            if (!descripcion || !cantidad || parseInt(cantidad) < 1) {
+            if (!idProducto || !cantidad || parseInt(cantidad) < 1) {
                 itemsValidos = false;
-                if (!descripcion) {
-                    productoSelect.next('.select2-container').css({ 'border': '1px solid #dc3545', 'border-radius': '.25rem' });
+                if (!idProducto) {
+                    productoSelect.addClass('is-invalid');
                 }
                 if (!cantidad || parseInt(cantidad) < 1) {
                     cantidadInput.addClass('is-invalid');
                 }
             } else {
                 items.push({
-                    id_producto: $(this).find('.id-producto').val() || null,
+                    id_producto: idProducto,
                     descripcion: descripcion,
                     cantidad: parseInt(cantidad),
                     valor_unitario: parseFloat($(this).find('.valor-unitario').val()) || 0
@@ -735,20 +751,28 @@ let contadorItems = 0;
 
 function agregarItem() {
     contadorItems++;
+
+    // Crear las opciones del select de productos
+    let opcionesProducto = '<option value="">Seleccione...</option>';
+    if (Array.isArray(todosLosProductos)) {
+        todosLosProductos.forEach(function(p) {
+            opcionesProducto += `<option value="${p.id_producto}">${p.nombre_producto}</option>`;
+        });
+    }
+
     const itemHtml = `
         <div class="item-row fade-in" id="item-${contadorItems}">
             <div class="row align-items-end">
                 <div class="col-md-5 col-lg-6 mb-2">
                     <div class="form-group">
                         <label for="producto-${contadorItems}">Producto *</label>
-                        <div class="producto-search-container">
-                            <select class="form-control select2-producto" id="producto-${contadorItems}"
-                                    data-item-index="${contadorItems}" style="width: 100%;">
-                                <option value="">Buscar producto...</option>
+                        <div class="select-group">
+                            <select class="form-control producto-select" id="producto-${contadorItems}"
+                                    data-item-index="${contadorItems}" onchange="actualizarDatosProducto(this)">
+                                ${opcionesProducto}
                             </select>
-                            <button type="button" class="btn btn-outline-secondary btn-nuevo-producto"
-                                    onclick="abrirModalProducto(${contadorItems})" title="Nuevo producto">
-                                <i class="fas fa-plus"></i> Nuevo
+                            <button type="button" class="btn btn-success" onclick="abrirModalProducto(${contadorItems})">
+                                <i class="fas fa-plus mr-1"></i> Nuevo
                             </button>
                         </div>
                         <input type="hidden" class="id-producto" id="id_producto-${contadorItems}">
@@ -794,39 +818,18 @@ function agregarItem() {
     `;
 
     $('#items-container').append(itemHtml);
-
-    // Inicializar select2 productos
-    $(`#producto-${contadorItems}`).select2({
-        placeholder: 'Buscar producto...',
-        allowClear: true,
-        width: '100%',
-        dropdownParent: $(document.body),
-        ajax: {
-            url: 'ajax/buscar_productos.php',
-            dataType: 'json',
-            delay: 250,
-            data: params => ({ termino: params.term }),
-            processResults: function (data) {
-                if (!Array.isArray(data)) return { results: [] };
-                return {
-                    results: data.map(item => ({
-                        id: item.id || item.id_producto,
-                        text: item.text || item.nombre_producto
-                    }))
-                };
-            },
-            cache: true
-        }
-    }).on('change', function() {
-        const itemIndex = $(this).data('item-index');
-        const selectedProduct = $(this).select2('data')[0];
-
-        if (selectedProduct) {
-            $(`#id_producto-${itemIndex}`).val(selectedProduct.id);
-            $(`#descripcion-${itemIndex}`).val(selectedProduct.text);
-        }
-    });
 }
+
+function actualizarDatosProducto(selectElement) {
+    const itemIndex = $(selectElement).data('item-index');
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const productoId = selectedOption.value;
+    const productoNombre = selectedOption.text;
+
+    $(`#id_producto-${itemIndex}`).val(productoId);
+    $(`#descripcion-${itemIndex}`).val(productoNombre);
+}
+
 
 function calcularTotalItem(itemId) {
     const cantidad = parseFloat($(`#cantidad-${itemId}`).val()) || 0;

@@ -8,6 +8,8 @@ class PersonaResponsable {
 
     public $id_responsable;
     public $nombre_responsable;
+    public $telefono;
+    public $correo;
 
     public function __construct($db) {
         $this->conn = $db;
@@ -17,15 +19,19 @@ class PersonaResponsable {
      * Crea una nueva persona responsable.
      */
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . " SET nombre_responsable = :nombre_responsable";
+        $query = "INSERT INTO " . $this->table_name . " SET nombre_responsable = :nombre_responsable, telefono = :telefono, correo = :correo";
 
         $stmt = $this->conn->prepare($query);
 
         // Limpiar datos
         $this->nombre_responsable = htmlspecialchars(strip_tags($this->nombre_responsable));
+        $this->telefono = htmlspecialchars(strip_tags($this->telefono));
+        $this->correo = htmlspecialchars(strip_tags($this->correo));
 
         // Vincular datos
         $stmt->bindParam(":nombre_responsable", $this->nombre_responsable);
+        $stmt->bindParam(":telefono", $this->telefono);
+        $stmt->bindParam(":correo", $this->correo);
 
         if ($stmt->execute()) {
             $this->id_responsable = $this->conn->lastInsertId();
@@ -39,7 +45,7 @@ class PersonaResponsable {
      * Obtiene una persona responsable por su ID.
      */
     public function obtenerPorId() {
-        $query = "SELECT id_responsable, nombre_responsable FROM " . $this->table_name . " WHERE id_responsable = :id_responsable LIMIT 0,1";
+        $query = "SELECT id_responsable, nombre_responsable, telefono, correo FROM " . $this->table_name . " WHERE id_responsable = :id_responsable LIMIT 0,1";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id_responsable", $this->id_responsable);
@@ -49,6 +55,8 @@ class PersonaResponsable {
 
         if ($row) {
             $this->nombre_responsable = $row['nombre_responsable'];
+            $this->telefono = $row['telefono'];
+            $this->correo = $row['correo'];
             return $row;
         }
         return null;
@@ -58,16 +66,20 @@ class PersonaResponsable {
      * Actualiza una persona responsable existente.
      */
     public function actualizar() {
-        $query = "UPDATE " . $this->table_name . " SET nombre_responsable = :nombre_responsable WHERE id_responsable = :id_responsable";
+        $query = "UPDATE " . $this->table_name . " SET nombre_responsable = :nombre_responsable, telefono = :telefono, correo = :correo WHERE id_responsable = :id_responsable";
 
         $stmt = $this->conn->prepare($query);
 
         // Limpiar datos
         $this->nombre_responsable = htmlspecialchars(strip_tags($this->nombre_responsable));
+        $this->telefono = htmlspecialchars(strip_tags($this->telefono));
+        $this->correo = htmlspecialchars(strip_tags($this->correo));
         $this->id_responsable = htmlspecialchars(strip_tags($this->id_responsable));
 
         // Vincular datos
         $stmt->bindParam(":nombre_responsable", $this->nombre_responsable);
+        $stmt->bindParam(":telefono", $this->telefono);
+        $stmt->bindParam(":correo", $this->correo);
         $stmt->bindParam(":id_responsable", $this->id_responsable);
 
         if ($stmt->execute()) {
@@ -100,7 +112,7 @@ class PersonaResponsable {
      * Obtiene una lista paginada de personas responsables, con filtro de búsqueda.
      */
     public function obtenerPaginados($inicio, $filas_por_pagina, $busqueda = '') {
-        $query = "SELECT id_responsable, nombre_responsable FROM " . $this->table_name;
+        $query = "SELECT id_responsable, nombre_responsable, telefono, correo FROM " . $this->table_name;
         $params = [];
 
         if (!empty($busqueda)) {
@@ -108,7 +120,7 @@ class PersonaResponsable {
             $params[':busqueda'] = "%" . htmlspecialchars(strip_tags($busqueda)) . "%";
         }
 
-        $query .= " ORDER BY nombre_responsable ASC LIMIT :inicio, :filas_por_pagina";
+        $query .= " ORDER BY id_responsable ASC LIMIT :inicio, :filas_por_pagina";
         
         $stmt = $this->conn->prepare($query);
 
@@ -129,7 +141,7 @@ class PersonaResponsable {
      * Obtiene todas las personas responsables.
      */
     public function obtenerTodos() {
-        $query = "SELECT id_responsable, nombre_responsable FROM " . $this->table_name . " ORDER BY nombre_responsable ASC";
+        $query = "SELECT id_responsable, nombre_responsable, telefono, correo FROM " . $this->table_name . " ORDER BY nombre_responsable ASC";
         
         $stmt = $this->conn->prepare($query);
         $stmt->execute();

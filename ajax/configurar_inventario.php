@@ -1,12 +1,5 @@
 <?php
-session_start();
 header('Content-Type: application/json');
-
-// Verificar sesión
-if (!isset($_SESSION['usuario_id'])) {
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit();
-}
 
 require_once '../config/database.php';
 require_once '../models/Producto.php';

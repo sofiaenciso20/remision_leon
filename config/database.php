@@ -1,7 +1,7 @@
 <?php
 // config/database.php
 class Database {
-    private $host = 'localhost';
+    private $host = '127.0.0.1';
     private $db_name = 'remisiones';
     private $username = 'root';
     private $password = '';
@@ -10,7 +10,7 @@ class Database {
     public function getConnection() {
         $this->conn = null;
         try {
-            $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->db_name, 
+            $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->db_name,
                                 $this->username, $this->password, array(
                                     PDO::ATTR_PERSISTENT => true,
                                     PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4",

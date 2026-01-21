@@ -76,25 +76,331 @@ include __DIR__ . '/views/layout/header.php';
     </div>
 </div>
 
-<!-- Modales: Nuevo, Entrada, Salida, Historial -->
-<!-- El HTML de los modales es el mismo que tenías -->
-<div class="modal fade" id="nuevoProductoModal" tabindex="-1">...</div>
-<div class="modal fade" id="entradaModal" tabindex="-1">...</div>
-<div class="modal fade" id="salidaModal" tabindex="-1">...</div>
-<div class="modal fade" id="historialModal" tabindex="-1">...</div>
+<!-- 1. Modal Nuevo Producto -->
+<div class="modal fade" id="nuevoProductoModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Producto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <!-- Formulario para un nuevo producto -->
+                <form id="formNuevoProducto">
+                    <div class="form-group">
+                        <label for="nombre_producto">Nombre del Producto</label>
+                        <input type="text" class="form-control" id="nombre_producto" name="nombre_producto" required>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="maneja_inventario" name="maneja_inventario">
+                        <label class="form-check-label" for="maneja_inventario">Maneja Inventario</label>
+                    </div>
+                    <div id="campos_inventario" style="display:none;">
+                        <div class="form-group">
+                            <label for="stock_inicial">Stock Inicial</label>
+                            <input type="number" class="form-control" id="stock_inicial" name="stock_inicial" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="stock_minimo">Stock Mínimo</label>
+                            <input type="number" class="form-control" id="stock_minimo" name="stock_minimo" value="0">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarProducto">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Modal de Movimiento (Unificado) -->
+<div class="modal fade" id="movimientoModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="movimientoModalLabel">Registrar Movimiento para <span id="nombreProductoMovimiento" class="font-weight-bold"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <form id="formMovimiento" novalidate>
+                    <input type="hidden" id="idProductoMovimiento" name="id_producto">
+                    <p>Stock Actual: <strong id="stockActualLabel"></strong> unidades.</p>
+                    <div class="form-group">
+                        <label for="tipo_movimiento">Tipo de Movimiento</label>
+                        <select class="form-control" id="tipo_movimiento" name="tipo_movimiento" required>
+                            <option value="entrada">Entrada</option>
+                            <option value="salida">Salida</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cantidad">Cantidad</label>
+                        <input type="number" class="form-control" id="cantidad" name="cantidad" required min="1">
+                        <div class="invalid-feedback">La cantidad debe ser un número positivo.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="observaciones">Observaciones</label>
+                        <textarea class="form-control" id="observaciones" name="observaciones" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarMovimiento">Guardar Movimiento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- 3. Modal de Historial -->
+<div class="modal fade" id="historialModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="historialModalLabel">Historial de Movimientos</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div id="historial-body">
+                    <!-- Contenido de la tabla cargado por AJAX -->
+                </div>
+                <!-- Contenedor para la paginación -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div id="info-paginacion-historial"></div>
+                    <nav><ul class="pagination mb-0" id="paginacion-controles-historial"></ul></nav>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php include __DIR__ . '/views/layout/footer.php'; ?>
 
 <script>
 $(document).ready(function() {
+    // Carga inicial
     cargarInventario(1);
 
-    // Eventos de filtros
+    // Filtros
     $('#buscarProducto').on('keypress', function(e) { if (e.which === 13) cargarInventario(1); });
-    $('#filtroInventario, #filtroStock').on('change', function() { cargarInventario(1); });
+    $('#filtroInventario, #filtroStock').on('change', () => cargarInventario(1));
 
-    // (Aquí va el código JS que ya tenías para manejar los modales de entrada, salida, historial y nuevo producto)
+    // Mostrar/ocultar campos de inventario al crear producto
+    $('#maneja_inventario').on('change', function() {
+        $('#campos_inventario').toggle(this.checked);
+    });
+
+    // Guardar nuevo producto
+    $('#guardarProducto').on('click', function() {
+        const form = $('#formNuevoProducto');
+        const data = {
+            nombre_producto: $('#nombre_producto').val(),
+            maneja_inventario: $('#maneja_inventario').is(':checked') ? 1 : 0,
+            stock_actual: $('#maneja_inventario').is(':checked') ? $('#stock_inicial').val() : 0,
+            stock_minimo: $('#maneja_inventario').is(':checked') ? $('#stock_minimo').val() : 0
+        };
+
+        $.ajax({
+            url: 'ajax/crear_producto.php',
+            method: 'POST',
+            data: data,
+            dataType: 'json',
+            success: function(response) {
+                console.log(response); // Debug
+                if (response.success) {
+                    $('#nuevoProductoModal').modal('hide');
+                    form[0].reset();
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: response.message,
+                        icon: 'success'
+                    });
+                    cargarInventario(1);
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: response.message,
+                        icon: 'error'
+                    });
+                }
+            },
+            error: function(xhr) {
+                console.log(xhr.responseText); // Debug
+                Swal.fire({
+                    title: 'Error',
+                    text: 'No se pudo crear el producto.',
+                    icon: 'error'
+                });
+            }
+        });
+    });
+
+    // Abrir modal de movimiento
+    $('#tabla-inventario-body').on('click', '.btn-movimiento', function() {
+        const id = $(this).data('id');
+        const nombre = $(this).data('nombre');
+        const stock = $(this).data('stock');
+
+        $('#idProductoMovimiento').val(id);
+        $('#nombreProductoMovimiento').text(nombre);
+        $('#stockActualLabel').text(stock);
+        $('#formMovimiento')[0].reset(); // Limpiar el formulario
+        $('#movimientoModal').modal('show');
+    });
+
+    // Guardar movimiento (entrada/salida)
+    $('#guardarMovimiento').on('click', function() {
+        const form = $('#formMovimiento');
+        const cantidadInput = $('#cantidad');
+        const cantidad = parseInt(cantidadInput.val());
+
+        // Limpiar validación previa
+        cantidadInput.removeClass('is-invalid');
+
+        // Validar cantidad
+        if (isNaN(cantidad) || cantidad <= 0) {
+            cantidadInput.addClass('is-invalid');
+            return;
+        }
+
+        const tipo = $('#tipo_movimiento').val();
+        const url = (tipo === 'entrada') ? 'ajax/registrar_entrada.php' : 'ajax/registrar_salida.php';
+        const data = form.serialize();
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: data,
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    $('#movimientoModal').modal('hide');
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: response.message,
+                        icon: 'success'
+                    });
+                    cargarInventario(1); // Recargar para ver el stock actualizado
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: response.message,
+                        icon: 'error'
+                    });
+                }
+            },
+            error: function(xhr) {
+                const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : 'Error al registrar el movimiento.';
+                Swal.fire({
+                    title: 'Error',
+                    text: errorMsg,
+                    icon: 'error'
+                });
+            }
+        });
+    });
+
+    // Abrir modal de historial - Inicia la carga de la primera página
+    $('#tabla-inventario-body').on('click', '.btn-historial', function() {
+        const id = $(this).data('id');
+        const nombre = $(this).data('nombre');
+
+        // Guardar el ID del producto en el modal para reuso en paginación
+        $('#historialModal').data('id-producto', id);
+        $('#historialModalLabel').text('Historial de: ' + nombre);
+
+        cargarHistorial(id, 1); // Cargar la primera página
+
+        $('#historialModal').modal('show');
+    });
 });
+
+function cargarHistorial(id_producto, pagina) {
+    const body = $('#historial-body');
+    body.html('<div class="text-center"><div class="spinner-border text-primary"></div></div>');
+
+    $.ajax({
+        url: 'ajax/obtener_movimientos.php',
+        method: 'GET',
+        data: { id_producto: id_producto, pagina: pagina },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                const { movimientos, paginacion } = response;
+
+                let html = '<p class="text-muted">No hay movimientos registrados.</p>';
+                if (movimientos.length > 0) {
+                    html = `
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th><th>Tipo</th><th>Cantidad</th><th>Stock Ant.</th>
+                                        <th>Stock Nvo.</th><th>Motivo</th><th>Usuario</th><th>Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    movimientos.forEach(m => {
+                        const badge = m.tipo_movimiento === 'entrada' ? 'bg-success' : 'bg-warning';
+                        html += `
+                            <tr>
+                                <td>${new Date(m.fecha_movimiento).toLocaleDateString('es-CO')} ${new Date(m.fecha_movimiento).toLocaleTimeString('es-CO')}</td>
+                                <td><span class="badge ${badge}">${m.tipo_movimiento}</span></td>
+                                <td><strong>${m.cantidad}</strong></td>
+                                <td>${m.stock_anterior}</td>
+                                <td>${m.stock_nuevo}</td>
+                                <td>${m.motivo.replace('_', ' ')}</td>
+                                <td>${m.usuario_nombre || 'Sistema'}</td>
+                                <td>${m.observaciones || '-'}</td>
+                            </tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                }
+                body.html(html);
+                actualizarPaginacionHistorial(paginacion);
+            } else {
+                body.html(`<div class="alert alert-danger">${response.message}</div>`);
+            }
+        },
+        error: function() {
+            body.html('<div class="alert alert-danger">Error de comunicación al cargar el historial.</div>');
+        }
+    });
+}
+
+function actualizarPaginacionHistorial(paginacion) {
+    const { pagina_actual, total_paginas, total_registros } = paginacion;
+    const id_producto = $('#historialModal').data('id-producto');
+    const controles = $('#paginacion-controles-historial');
+    const info = $('#info-paginacion-historial');
+
+    controles.empty();
+    info.empty();
+
+    if (total_registros > 0) {
+        info.text(`Página ${pagina_actual} de ${total_paginas} (${total_registros} movimientos)`);
+
+        if (total_paginas > 1) {
+            let html = '';
+            const rango = 2;
+
+            html += `<li class="page-item ${pagina_actual <= 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="event.preventDefault(); cargarHistorial(${id_producto}, ${pagina_actual - 1});">Anterior</a></li>`;
+
+            for (let i = Math.max(1, pagina_actual - rango); i <= Math.min(total_paginas, pagina_actual + rango); i++) {
+                html += `<li class="page-item ${i === pagina_actual ? 'active' : ''}"><a class="page-link" href="#" onclick="event.preventDefault(); cargarHistorial(${id_producto}, ${i});">${i}</a></li>`;
+            }
+
+            html += `<li class="page-item ${pagina_actual >= total_paginas ? 'disabled' : ''}"><a class="page-link" href="#" onclick="event.preventDefault(); cargarHistorial(${id_producto}, ${pagina_actual + 1});">Siguiente</a></li>`;
+
+            controles.html(html);
+        }
+    }
+}
 
 function cargarInventario(pagina) {
     const busqueda = $('#buscarProducto').val();
@@ -148,10 +454,13 @@ function cargarInventario(pagina) {
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
                                         ${p.maneja_inventario == 1 ? `
-                                        <button class="btn btn-outline-primary btn-entrada" data-id="${p.id_producto}" data-nombre="${p.nombre_producto}"><i class="fas fa-arrow-down"></i></button>
-                                        <button class="btn btn-outline-warning btn-salida" data-id="${p.id_producto}" data-nombre="${p.nombre_producto}" data-stock="${p.stock_actual}"><i class="fas fa-arrow-up"></i></button>
+                                        <button class="btn btn-outline-success btn-movimiento" data-id="${p.id_producto}" data-nombre="${p.nombre_producto}" data-stock="${p.stock_actual}" title="Registrar Movimiento">
+                                            <i class="fas fa-exchange-alt"></i> Movimiento
+                                        </button>
                                         ` : ''}
-                                        <button class="btn btn-outline-info btn-historial" data-id="${p.id_producto}" data-nombre="${p.nombre_producto}"><i class="fas fa-history"></i></button>
+                                        <button class="btn btn-outline-info btn-historial" data-id="${p.id_producto}" data-nombre="${p.nombre_producto}" title="Ver Historial">
+                                            <i class="fas fa-history"></i> Historial
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -178,7 +487,7 @@ function actualizarPaginacionInventario(paginacion) {
 
     if (total_productos > 0) {
         $('#info-paginacion-inventario').text(`Página ${pagina_actual} de ${total_paginas} (${total_productos} productos)`);
-        
+
         let html = '';
         const rango = 2;
         html += `<li class="page-item ${pagina_actual <= 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="event.preventDefault(); cargarInventario(${pagina_actual - 1});">Anterior</a></li>`;

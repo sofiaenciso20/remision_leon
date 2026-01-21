@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Cliente.php';
 require_once __DIR__ . '/models/Remision.php';
@@ -16,8 +17,8 @@ $totalClientes = $cliente->contarTotal();
 $totalRemisiones = $remision->contarTotal();
 
 try {
-    $remisionesHoy = method_exists($remision, 'contarPorFecha') 
-        ? $remision->contarPorFecha(date('Y-m-d')) 
+    $remisionesHoy = method_exists($remision, 'contarPorFecha')
+        ? $remision->contarPorFecha(date('Y-m-d'))
         : 0;
 } catch (Error $e) {
     $remisionesHoy = 0;
@@ -178,11 +179,11 @@ include __DIR__ . '/views/layout/header.php';
                                                 <?php echo $remision['nombre_cliente']; ?>
                                             </span>
                                             <div class="btn-group mt-2">
-                                                <a href="ajax/ver_remision.php?id=<?php echo $remision['id_remision']; ?>" 
+                                                <a href="ajax/ver_remision.php?id=<?php echo $remision['id_remision']; ?>"
                                                    class="btn btn-sm btn-outline-primary" target="_blank">
                                                     <i class="fas fa-eye"></i> Ver
                                                 </a>
-                                                <a href="generar_pdf.php?id=<?php echo $remision['id_remision']; ?>" 
+                                                <a href="generar_pdf.php?id=<?php echo $remision['id_remision']; ?>"
                                                    class="btn btn-sm btn-outline-danger" target="_blank">
                                                     <i class="fas fa-file-pdf"></i> PDF
                                                 </a>

@@ -36,13 +36,13 @@ try {
     }
 
     // 2. Borrar los items antiguos
-    $query_delete = "DELETE FROM remision_items WHERE id_remision = :id_remision";
+    $query_delete = "DELETE FROM items_remisionados WHERE id_remision = :id_remision";
     $stmt_delete = $db->prepare($query_delete);
     $stmt_delete->bindParam(':id_remision', $id_remision);
     $stmt_delete->execute();
 
     // 3. Insertar los items nuevos
-    $query_insert = "INSERT INTO remision_items (id_remision, id_producto, descripcion, cantidad, valor_unitario) 
+    $query_insert = "INSERT INTO items_remisionados (id_remision, id_producto, descripcion, cantidad, valor_unitario)
                      VALUES (:id_remision, :id_producto, :descripcion, :cantidad, :valor_unitario)";
     $stmt_insert = $db->prepare($query_insert);
 
@@ -52,7 +52,7 @@ try {
         $stmt_insert->bindParam(':descripcion', $item['descripcion']);
         $stmt_insert->bindParam(':cantidad', $item['cantidad']);
         $stmt_insert->bindParam(':valor_unitario', $item['valor_unitario']);
-        
+
         if (!$stmt_insert->execute()) {
             throw new Exception("No se pudo guardar un item de la remisión.");
         }

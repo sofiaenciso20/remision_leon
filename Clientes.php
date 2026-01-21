@@ -116,19 +116,49 @@ include __DIR__ . '/views/layout/header.php';
                 <h4 class="modal-title mb-0"><i class="fas fa-plus mr-2"></i> Crear Nuevo Cliente</h4>
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
-            <form id="formCrearCliente">
+            <form id="formCrearCliente" novalidate>
                 <div class="modal-body p-4">
-                    <!-- Contenido del formulario de creación -->
-                     <div class="row">
-                        <div class="col-md-8 mb-3"><div class="form-group"><label for="nombre_cliente" class="form-label">Nombre del Cliente *</label><input type="text" class="form-control" id="nombre_cliente" name="nombre_cliente" required></div></div>
-                        <div class="col-md-4 mb-3"><div class="form-group"><label for="tipo_cliente" class="form-label">Tipo *</label><select class="form-control" id="tipo_cliente" name="tipo_cliente" required><option value="persona">Persona</option><option value="empresa">Empresa</option></select></div></div>
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <div class="form-group">
+                                <label for="nombre_cliente" class="form-label">Nombre del Cliente *</label>
+                                <input type="text" class="form-control" id="nombre_cliente" name="nombre_cliente" required>
+                                <div class="invalid-feedback">Por favor, ingrese el nombre del cliente.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="form-group">
+                                <label for="tipo_cliente" class="form-label">Tipo *</label>
+                                <select class="form-control" id="tipo_cliente" name="tipo_cliente" required>
+                                    <option value="persona">Persona</option>
+                                    <option value="empresa">Empresa</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3"><div class="form-group"><label for="nit" class="form-label">NIT/Cédula *</label><input type="text" class="form-control" id="nit" name="nit" required></div></div>
-                        <div class="col-md-6 mb-3"><div class="form-group"><label for="telefono_cliente" class="form-label">Teléfono</label><input type="text" class="form-control" id="telefono_cliente" name="telefono"></div></div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label for="nit" class="form-label">NIT/Cédula *</label>
+                                <input type="text" class="form-control" id="nit" name="nit" required>
+                                <div class="invalid-feedback">Por favor, ingrese el NIT o cédula.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label for="telefono_cliente" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="telefono_cliente" name="telefono">
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group mb-3"><label for="direccion" class="form-label">Dirección</label><input type="text" class="form-control" id="direccion" name="direccion"></div>
-                    <div class="form-group mb-3"><label for="correo_cliente" class="form-label">Correo Electrónico</label><input type="email" class="form-control" id="correo_cliente" name="correo"></div>
+                    <div class="form-group mb-3">
+                        <label for="direccion" class="form-label">Dirección</label>
+                        <input type="text" class="form-control" id="direccion" name="direccion">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="correo_cliente" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="correo_cliente" name="correo">
+                    </div>
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-outline-secondary" data-dismiss="modal"><i class="fas fa-times mr-1"></i> Cancelar</button>
@@ -200,19 +230,42 @@ $(document).ready(function() {
     // Crear cliente
     $('#formCrearCliente').on('submit', function(e) {
         e.preventDefault();
+
+        let form = $(this);
+        let esValido = true;
+
+        // Limpiar validaciones previas
+        form.find('.is-invalid').removeClass('is-invalid');
+
+        // Validar campos requeridos
+        form.find('input[required]').each(function() {
+            if ($(this).val().trim() === '') {
+                $(this).addClass('is-invalid');
+                esValido = false;
+            }
+        });
+
+        if (!esValido) {
+            return;
+        }
+
         $.ajax({
             url: 'ajax/crear_cliente.php',
             type: 'POST',
-            data: $(this).serialize(),
+            data: form.serialize(),
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
                     $('#modalCrearCliente').modal('hide');
                     Swal.fire('¡Éxito!', 'Cliente creado correctamente', 'success');
                     cargarClientes(1); // Recargar la tabla
+                    form[0].reset(); // Limpiar el formulario
                 } else {
                     Swal.fire('Error', response.message || 'No se pudo crear el cliente.', 'error');
                 }
+            },
+            error: function() {
+                 Swal.fire('Error', 'Ocurrió un error de comunicación.', 'error');
             }
         });
     });

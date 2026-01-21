@@ -46,14 +46,6 @@
                 </a>
             </li>
         </ul>
-
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="#" role="button">
-                    <i class="fas fa-user"></i> Usuario
-                </a>
-            </li>
-        </ul>
     </nav>
     <!-- /.navbar -->
 

@@ -3,15 +3,15 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/Remision.php';
 require_once __DIR__ . '/../models/ItemRemisionado.php';
 require_once __DIR__ . '/../models/Producto.php';
-require_once __DIR__ . '/../models/MovimientoInventario.php';
 
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $db = null;
     try {
         $database = new Database();
         $db = $database->getConnection();
-        
+
         if (!$db) {
             throw new Exception('Error de conexión a la base de datos');
         }
@@ -23,24 +23,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->beginTransaction();
 
         $remision = new Remision($db);
-        $itemRemisionado = new ItemRemisionado($db);
         $productoModel = new Producto($db);
-        $movimientoInventario = new MovimientoInventario($db);
 
-        // 🔹 NUEVO: Tipo Remisión y Persona Responsable
         $remision->tipo_remision = $_POST['tipo_remision'] ?? 'Venta';
-        $remision->id_responsable = !empty($_POST['id_responsable']) 
-                                            ? (int) $_POST['id_responsable'] 
-                                            : null;
-
-        // Campos anteriores
-        $remision->numero_remision = (int) $_POST['numero_remision'];
+        $remision->id_responsable = !empty($_POST['id_responsable']) ? (int)$_POST['id_responsable'] : null;
+        $remision->numero_remision = (int)$_POST['numero_remision'];
         $remision->fecha_emision = $_POST['fecha_emision'];
-        $remision->id_cliente = (int) $_POST['id_cliente'];
-        $remision->id_persona = !empty($_POST['id_persona']) ? (int) $_POST['id_persona'] : null;
+        $remision->id_cliente = (int)$_POST['id_cliente'];
+        $remision->id_persona = !empty($_POST['id_persona']) ? (int)$_POST['id_persona'] : null;
         $remision->id_usuario = 1;
         $remision->observaciones = $_POST['observaciones'] ?? null;
-        $remision->id_estado = !empty($_POST['id_estado']) ? (int) $_POST['id_estado'] : 1;
+        $remision->id_estado = 1;
 
         $id_remision = $remision->crear();
 
@@ -59,51 +52,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             foreach ($items as $item) {
-                if (empty($item['descripcion']) || empty($item['cantidad'])) {
+                if (empty($item['id_producto']) || empty($item['cantidad'])) {
                     continue;
                 }
 
                 $itemObj = new ItemRemisionado($db);
                 $itemObj->id_remision = $id_remision;
-                $itemObj->id_producto = !empty($item['id_producto']) ? (int) $item['id_producto'] : null;
+                $itemObj->id_producto = (int)$item['id_producto'];
                 $itemObj->descripcion = $item['descripcion'];
-                $itemObj->cantidad = (int) $item['cantidad'];
-                $itemObj->valor_unitario = !empty($item['valor_unitario']) ? (float) $item['valor_unitario'] : 0.00;
+                $itemObj->cantidad = (int)$item['cantidad'];
+                $itemObj->valor_unitario = (float)($item['valor_unitario'] ?? 0.00);
 
                 if ($itemObj->crear()) {
                     $items_procesados++;
 
-                    if (!empty($item['id_producto'])) {
-                        $query_producto = "SELECT maneja_inventario, stock_actual FROM productos WHERE id_producto = ?";
-                        $stmt = $db->prepare($query_producto);
-                        $stmt->execute([$item['id_producto']]);
-                        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($remision->tipo_remision === 'Venta') {
+                        $producto_info = $productoModel->obtenerPorId($item['id_producto']);
 
-                        if ($producto && $producto['maneja_inventario']) {
-                            if ($producto['stock_actual'] < $item['cantidad']) {
-                                throw new Exception('Stock insuficiente del producto: ' . $item['descripcion']);
+                        if ($producto_info && $producto_info['maneja_inventario']) {
+                            $movimiento_exitoso = $remision->registrarMovimientoInventario(
+                                $item['id_producto'],
+                                $item['cantidad'],
+                                $id_remision
+                            );
+
+                            if ($movimiento_exitoso) {
+                                $items_con_inventario++;
+                            } else {
+                                throw new Exception('Stock insuficiente para el producto: ' . $item['descripcion']);
                             }
-
-                            $stock_anterior = $producto['stock_actual'];
-                            $stock_nuevo = $stock_anterior - $item['cantidad'];
-
-                            $update_stock = "UPDATE productos SET stock_actual = ? WHERE id_producto = ?";
-                            $stmt = $db->prepare($update_stock);
-                            $stmt->execute([$stock_nuevo, $item['id_producto']]);
-
-                            $movimiento = new MovimientoInventario($db);
-                            $movimiento->id_producto = $item['id_producto'];
-                            $movimiento->tipo_movimiento = 'salida';
-                            $movimiento->cantidad = $item['cantidad'];
-                            $movimiento->stock_anterior = $stock_anterior;
-                            $movimiento->stock_nuevo = $stock_nuevo;
-                            $movimiento->motivo = 'remision';
-                            $movimiento->id_remision = $id_remision;
-                            $movimiento->id_usuario = 1;
-                            $movimiento->observaciones = "Remisión #" . $remision->numero_remision;
-                            $movimiento->crear();
-
-                            $items_con_inventario++;
                         }
                     }
                 }
@@ -115,13 +92,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode([
             'success' => true,
             'id_remision' => $id_remision,
-            'message' => 'Remisión creada correctamente',
+            'numero_remision' => $remision->numero_remision,
+            'message' => 'Remisión creada correctamente.',
             'items_procesados' => $items_procesados,
             'items_con_inventario' => $items_con_inventario
         ]);
 
     } catch (Exception $e) {
-        if ($db->inTransaction()) {
+        if ($db && $db->inTransaction()) {
             $db->rollBack();
         }
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);

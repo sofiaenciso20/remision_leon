@@ -10,17 +10,21 @@ $db = $database->getConnection();
 
 $persona = new PersonaResponsable($db);
 
-$id_responsable = isset($_POST['id_responsable']) ? $_POST['id_responsable'] : die(json_encode(['success' => false, 'message' => 'ID no proporcionado.']));
-$nombre_responsable = isset($_POST['nombre_responsable']) ? $_POST['nombre_responsable'] : die(json_encode(['success' => false, 'message' => 'Nombre no proporcionado.']));
+$id_responsable = isset($_POST['id_responsable']) ? $_POST['id_responsable'] : '';
+$nombre_responsable = isset($_POST['nombre_responsable']) ? $_POST['nombre_responsable'] : '';
+$telefono = isset($_POST['telefono']) ? $_POST['telefono'] : '';
+$correo = isset($_POST['correo']) ? $_POST['correo'] : '';
+
+if (empty($id_responsable) || empty($nombre_responsable)) {
+    echo json_encode(['success' => false, 'message' => 'El ID y el nombre son obligatorios.']);
+    exit;
+}
 
 // Asignar valores al objeto persona
 $persona->id_responsable = $id_responsable;
 $persona->nombre_responsable = $nombre_responsable;
-
-if (empty($persona->nombre_responsable)) {
-    echo json_encode(['success' => false, 'message' => 'El nombre del responsable es obligatorio.']);
-    exit;
-}
+$persona->telefono = $telefono;
+$persona->correo = $correo;
 
 try {
     if ($persona->actualizar()) {

@@ -108,8 +108,11 @@ include 'views/layout/header.php';
                     </div>
                 </div>
 
-                <div class="card-footer bg-white py-3 text-right">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Guardar Cambios</button>
+                <div class="card-footer bg-white py-3">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="listar_remisiones.php" class="btn btn-outline-secondary"><i class="fas fa-arrow-left mr-1"></i> Cancelar</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Guardar Cambios</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -151,7 +154,7 @@ $(document).ready(function() {
 
     $('#formEditarRemision').on('submit', function(e) {
         e.preventDefault();
-        
+
         const formData = new FormData(this);
         const items = [];
         $('.item-row').each(function() {
@@ -195,7 +198,7 @@ function cargarRemisionParaEditar(id) {
         success: function(response) {
             if (response.success) {
                 const remision = response.data;
-                
+
                 $('#numero_remision').val(remision.numero_remision);
                 // Corregir el formato de la fecha, manejando fechas inválidas
                 if (remision.fecha_emision && remision.fecha_emision.startsWith('0000-00-00')) {
@@ -213,7 +216,7 @@ function cargarRemisionParaEditar(id) {
                 if (remision.id_cliente && remision.nombre_cliente) {
                     const clienteOption = new Option(remision.nombre_cliente, remision.id_cliente, true, true);
                     $('#cliente').append(clienteOption).trigger('change');
-                    
+
                     // Aseguramos que la carga de contactos se hace DESPUÉS de popular el cliente
                     // y con el ID de la persona correcta a seleccionar.
                     cargarPersonasContacto(remision.id_cliente, remision.id_persona);
@@ -246,7 +249,7 @@ function cargarPersonasContacto(clienteId, seleccionarId) {
         success: function(personas) {
             const select = $('#persona_contacto');
             select.empty().append('<option value="">Seleccione...</option>');
-            
+
             let idEncontradoEnLista = false;
             if (Array.isArray(personas)) {
                 personas.forEach(p => {
@@ -260,7 +263,7 @@ function cargarPersonasContacto(clienteId, seleccionarId) {
             // 2. Si el ID a seleccionar está en la lista, simplemente lo seleccionamos.
             if (seleccionarId && idEncontradoEnLista) {
                 select.val(seleccionarId);
-            } 
+            }
             // 3. Si no está en la lista (caso raro, ej: contacto eliminado), lo cargamos por separado y lo añadimos.
             else if (seleccionarId && !idEncontradoEnLista) {
                 $.ajax({
@@ -305,23 +308,34 @@ function agregarItem(item = null) {
             <input type="hidden" class="id-producto" value="${item ? item.id_producto : ''}">
             <div class="row align-items-end">
                 <div class="col-md-5 mb-2">
-                    <label>Producto</label>
-                    <input type="text" class="form-control descripcion" value="${item ? item.descripcion : ''}" placeholder="Descripción del item">
+                    <div class="form-group">
+                        <label class="form-label">Producto</label>
+                        <input type="text" class="form-control descripcion" value="${item ? item.descripcion : ''}" placeholder="Descripción del item">
+                    </div>
                 </div>
                 <div class="col-md-2 mb-2">
-                    <label>Cantidad</label>
-                    <input type="number" class="form-control cantidad" value="${item ? item.cantidad : 1}" min="1" onchange="calcularTotalGeneral()">
+                    <div class="form-group">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" class="form-control cantidad" value="${item ? item.cantidad : 1}" min="1" onchange="calcularTotalGeneral()">
+                    </div>
                 </div>
                 <div class="col-md-2 mb-2">
-                    <label>Valor Unitario</label>
-                    <input type="number" class="form-control valor-unitario" value="${item ? item.valor_unitario : 0}" min="0" onchange="calcularTotalGeneral()">
+                    <div class="form-group">
+                        <label class="form-label">Valor Unitario</label>
+                        <input type="number" class="form-control valor-unitario" value="${item ? item.valor_unitario : 0}" min="0" onchange="calcularTotalGeneral()">
+                    </div>
                 </div>
                 <div class="col-md-2 mb-2">
-                    <label>Total</label>
-                    <input type="text" class="form-control total-item" readonly>
+                    <div class="form-group">
+                        <label class="form-label">Total</label>
+                        <input type="text" class="form-control total-item" readonly>
+                    </div>
                 </div>
                 <div class="col-md-1 mb-2">
-                    <button type="button" class="btn btn-danger btn-block" onclick="eliminarItem('${itemId}')"><i class="fas fa-trash"></i></button>
+                    <div class="form-group">
+                        <label class="form-label d-none d-md-block">&nbsp;</label>
+                        <button type="button" class="btn btn-danger btn-block" onclick="eliminarItem('${itemId}')"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
             </div>
         </div>`;

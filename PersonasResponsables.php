@@ -50,9 +50,11 @@ include __DIR__ . '/views/layout/header.php';
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th class="text-center">Acciones</th>
+                            <th class="border-0">ID</th>
+                            <th class="border-0">Nombre</th>
+                            <th class="border-0">Teléfono</th>
+                            <th class="border-0">Correo</th>
+                            <th class="border-0 text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-personas-responsables-body"></tbody>
@@ -71,14 +73,24 @@ include __DIR__ . '/views/layout/header.php';
 <!-- Modales -->
 <!-- Modal Crear Persona Responsable -->
 <div class="modal fade" id="modalCrearPersonaResponsable" tabindex="-1" role="dialog">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header bg-light"><h4 class="modal-title mb-0"><i class="fas fa-plus mr-2"></i> Crear Persona Responsable</h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>
-            <form id="formCrearPersonaResponsable">
+            <form id="formCrearPersonaResponsable" novalidate>
                 <div class="modal-body p-4">
                     <div class="form-group">
-                        <label>Nombre *</label>
-                        <input type="text" name="nombre_responsable" class="form-control" required>
+                        <label class="form-label" for="crear_nombre_responsable">Nombre *</label>
+                        <input type="text" id="crear_nombre_responsable" name="nombre_responsable" class="form-control" required>
+                        <div class="invalid-feedback">Por favor, ingrese el nombre.</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="crear_telefono_responsable">Teléfono</label>
+                        <input type="text" id="crear_telefono_responsable" name="telefono" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="crear_correo_responsable">Correo</label>
+                        <input type="email" id="crear_correo_responsable" name="correo" class="form-control">
+                        <div class="invalid-feedback">Por favor, ingrese un correo electrónico válido.</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -92,31 +104,44 @@ include __DIR__ . '/views/layout/header.php';
 
 <!-- Modal Ver Persona Responsable -->
 <div class="modal fade" id="modalVerPersonaResponsable" tabindex="-1" role="dialog">
-    <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header bg-light"><h4 class="modal-title mb-0"><i class="fas fa-eye mr-2"></i> Detalles</h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>
-        <div class="modal-body p-4" id="detalles-persona-responsable-body"></div>
-        <div class="modal-footer bg-light"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal"><i class="fas fa-times mr-1"></i> Cerrar</button></div>
-    </div></div>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-light"><h4 class="modal-title mb-0"><i class="fas fa-eye mr-2"></i> Detalles</h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body p-4" id="detalles-persona-responsable-body"></div>
+            <div class="modal-footer bg-light"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal"><i class="fas fa-times mr-1"></i> Cerrar</button></div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal Editar Persona Responsable -->
 <div class="modal fade" id="modalEditarPersonaResponsable" tabindex="-1" role="dialog">
-    <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header bg-light"><h4 class="modal-title mb-0"><i class="fas fa-edit mr-2"></i> Editar Persona Responsable</h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>
-        <form id="formEditarPersonaResponsable">
-            <input type="hidden" id="editar_id_responsable" name="id_responsable">
-            <div class="modal-body p-4">
-                 <div class="form-group">
-                    <label>Nombre *</label>
-                    <input type="text" id="editar_nombre_responsable" name="nombre_responsable" class="form-control" required>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-light"><h4 class="modal-title mb-0"><i class="fas fa-edit mr-2"></i> Editar Persona Responsable</h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <form id="formEditarPersonaResponsable">
+                <input type="hidden" id="editar_id_responsable" name="id_responsable">
+                <div class="modal-body p-4">
+                    <div class="form-group">
+                        <label class="form-label" for="editar_nombre_responsable">Nombre *</label>
+                        <input type="text" id="editar_nombre_responsable" name="nombre_responsable" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editar_telefono_responsable">Teléfono</label>
+                        <input type="text" id="editar_telefono_responsable" name="telefono" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editar_correo_responsable">Correo</label>
+                        <input type="email" id="editar_correo_responsable" name="correo" class="form-control">
+                        <div class="invalid-feedback">Por favor, ingrese un correo electrónico válido.</div>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal"><i class="fas fa-times mr-1"></i> Cancelar</button>
-                <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Actualizar</button>
-            </div>
-        </form>
-    </div></div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal"><i class="fas fa-times mr-1"></i> Cancelar</button>
+                    <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Actualizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 
@@ -131,16 +156,45 @@ $(document).ready(function() {
 });
 
 function manejarSubmit(form, url, actionText) {
+    let $form = $(form);
+    let esValido = true;
+
+    // Limpiar validaciones previas
+    $form.find('.is-invalid').removeClass('is-invalid');
+
+    // Validar campos requeridos
+    $form.find('input[required]').each(function() {
+        if ($(this).val().trim() === '') {
+            $(this).addClass('is-invalid');
+            esValido = false;
+        }
+    });
+
+    // Validar correo electrónico
+    const correoInput = $form.find('input[type="email"]');
+    if (correoInput.length > 0) {
+        const correo = correoInput.val().trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (correo && !emailRegex.test(correo)) {
+            correoInput.addClass('is-invalid');
+            esValido = false;
+        }
+    }
+
+    if (!esValido) {
+        return;
+    }
+
     $.ajax({
         url: url,
         type: 'POST',
-        data: $(form).serialize(),
+        data: $form.serialize(),
         dataType: 'json',
         success: function(response) {
             if (response.success) {
-                $(form).closest('.modal').modal('hide');
+                $form.closest('.modal').modal('hide');
+                $form[0].reset();
                 Swal.fire('¡Éxito!', `Persona responsable ${actionText} correctamente`, 'success');
-                // Recargar en la página actual al editar, o en la primera al crear
                 const paginaActual = actionText === 'actualizada' ? ($('#paginacion-controles-personas-responsables .active .page-link').text() || 1) : 1;
                 cargarPersonasResponsables(paginaActual);
             } else {
@@ -159,7 +213,7 @@ function cargarPersonasResponsables(pagina) {
         method: 'POST',
         data: { pagina: pagina, busqueda: $('#buscador-personas-responsables').val() },
         dataType: 'json',
-        beforeSend: function() { $('#tabla-personas-responsables-body').html('<tr><td colspan="3" class="text-center"><div class="spinner-border text-primary"></div></td></tr>'); },
+        beforeSend: function() { $('#tabla-personas-responsables-body').html('<tr><td colspan="5" class="text-center"><div class="spinner-border text-primary"></div></td></tr>'); },
         success: function(response) {
             if (response.success) {
                 const { personas, paginacion } = response;
@@ -167,11 +221,11 @@ function cargarPersonasResponsables(pagina) {
                 if (personas.length > 0) {
                     personas.forEach(p => $('#tabla-personas-responsables-body').append(crearFilaPersona(p)));
                 } else {
-                    $('#tabla-personas-responsables-body').append('<tr><td colspan="3" class="text-center empty-state"><i class="fas fa-search fa-2x text-muted mb-3"></i><p>No se encontraron personas responsables.</p></td></tr>');
+                    $('#tabla-personas-responsables-body').append('<tr><td colspan="5" class="text-center empty-state"><i class="fas fa-search fa-2x text-muted mb-3"></i><p>No se encontraron personas responsables.</p></td></tr>');
                 }
                 actualizarPaginacion(paginacion);
-            } else { 
-                Swal.fire('Error', response.message || 'No se pudieron cargar los datos.', 'error'); 
+            } else {
+                Swal.fire('Error', response.message || 'No se pudieron cargar los datos.', 'error');
             }
         },
         error: function() { Swal.fire('Error', 'Error de comunicación con el servidor.', 'error'); }
@@ -183,6 +237,8 @@ function crearFilaPersona(p) {
         <tr>
             <td>#${p.id_responsable}</td>
             <td>${p.nombre_responsable}</td>
+            <td>${p.telefono || '-'}</td>
+            <td>${p.correo || '-'}</td>
             <td class="text-center">
                 <div class="d-flex justify-content-center gap-1">
                     <button class="btn btn-sm btn-outline-info" onclick="verPersonaResponsable(${p.id_responsable})"><i class="fas fa-eye"></i></button>
@@ -196,24 +252,24 @@ function actualizarPaginacion(paginacion) {
     const { pagina_actual, total_paginas, total_registros } = paginacion;
     const controles = $('#paginacion-controles-personas-responsables');
     const info = $('#info-paginacion-personas-responsables');
-    
+
     controles.empty();
     info.empty();
 
     if (total_registros > 0) {
         info.text(`Página ${pagina_actual} de ${total_paginas} (${total_registros} registros)`);
-        
+
         let html = '';
         const rango = 2;
 
         html += `<li class="page-item ${pagina_actual <= 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="event.preventDefault(); cargarPersonasResponsables(${pagina_actual - 1});">Anterior</a></li>`;
-        
+
         for (let i = Math.max(1, pagina_actual - rango); i <= Math.min(total_paginas, pagina_actual + rango); i++) {
             html += `<li class="page-item ${i === pagina_actual ? 'active' : ''}"><a class="page-link" href="#" onclick="event.preventDefault(); cargarPersonasResponsables(${i});">${i}</a></li>`;
         }
 
         html += `<li class="page-item ${pagina_actual >= total_paginas ? 'disabled' : ''}"><a class="page-link" href="#" onclick="event.preventDefault(); cargarPersonasResponsables(${pagina_actual + 1});">Siguiente</a></li>`;
-        
+
         controles.html(html);
     }
 }
@@ -225,10 +281,10 @@ function verPersonaResponsable(id) {
         success: function(response) {
             if (response.success) {
                 const p = response.data;
-                $('#detalles-persona-responsable-body').html(`<p><strong>ID:</strong> ${p.id_responsable}</p><p><strong>Nombre:</strong> ${p.nombre_responsable}</p>`);
+                $('#detalles-persona-responsable-body').html(`<p><strong>ID:</strong> ${p.id_responsable}</p><p><strong>Nombre:</strong> ${p.nombre_responsable}</p><p><strong>Teléfono:</strong> ${p.telefono || '-'}</p><p><strong>Correo:</strong> ${p.correo || '-'}</p>`);
                 $('#modalVerPersonaResponsable').modal('show');
-            } else { 
-                Swal.fire('Error', 'No se pudieron cargar los detalles.', 'error'); 
+            } else {
+                Swal.fire('Error', 'No se pudieron cargar los detalles.', 'error');
             }
         },
         error: function() {
@@ -246,9 +302,11 @@ function editarPersonaResponsable(id) {
                 const p = response.data;
                 $('#editar_id_responsable').val(p.id_responsable);
                 $('#editar_nombre_responsable').val(p.nombre_responsable);
+                $('#editar_telefono_responsable').val(p.telefono);
+                $('#editar_correo_responsable').val(p.correo);
                 $('#modalEditarPersonaResponsable').modal('show');
-            } else { 
-                Swal.fire('Error', 'No se pudieron cargar los datos para editar.', 'error'); 
+            } else {
+                Swal.fire('Error', 'No se pudieron cargar los datos para editar.', 'error');
             }
         },
         error: function() {

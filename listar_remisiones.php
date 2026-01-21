@@ -28,9 +28,20 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-white py-3"><h4 class="card-title mb-0"><i class="fas fa-filter text-secondary mr-2"></i> Filtros</h4></div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-3"><label>Buscar por N°, Cliente o NIT</label><input type="text" class="form-control" id="busqueda-remision" placeholder="Término de búsqueda..."></div>
-                    <div class="col-md-6 mb-3"><label>Filtrar por Fecha</label><input type="date" class="form-control" id="fecha-remision"></div>
+                <div class="row align-items-end">
+                    <div class="col-md-5 mb-3">
+                        <label for="busqueda-remision">Buscar por N°, Cliente o NIT</label>
+                        <input type="text" class="form-control" id="busqueda-remision" placeholder="Escriba y presione Enter...">
+                    </div>
+                    <div class="col-md-5 mb-3">
+                        <label for="fecha-remision">Filtrar por Fecha</label>
+                        <input type="date" class="form-control" id="fecha-remision">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <button class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()">
+                            <i class="fas fa-times mr-1"></i> Limpiar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -43,7 +54,12 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Número</th><th>Fecha</th><th>Cliente</th><th>NIT</th><th>Contacto</th><th class="text-center">Acciones</th>
+                                <th class="border-0">Número</th>
+                                <th class="border-0">Fecha</th>
+                                <th class="border-0">Cliente</th>
+                                <th class="border-0">NIT</th>
+                                <th class="border-0">Contacto</th>
+                                <th class="border-0 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tabla-remisiones-body"></tbody>
@@ -150,6 +166,12 @@ function verRemision(id) {
         },
         error: function() { Swal.fire('Error', 'No se pudieron cargar los detalles.', 'error'); }
     });
+}
+
+function limpiarFiltros() {
+    $('#busqueda-remision').val('');
+    $('#fecha-remision').val('');
+    cargarRemisiones(1);
 }
 </script>
 

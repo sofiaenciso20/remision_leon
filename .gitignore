@@ -1,2 +1,5 @@
 /memory-bank
 /.github
+php_errors.log
+ajax/db_errors.log
+ajax/debug.log

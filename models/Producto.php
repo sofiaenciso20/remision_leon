@@ -194,5 +194,16 @@ class Producto {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function obtenerHistorialMovimientos($id_producto) {
+        $query = "SELECT *
+                  FROM movimientos_inventario
+                  WHERE id_producto = :id_producto
+                  ORDER BY fecha_movimiento DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

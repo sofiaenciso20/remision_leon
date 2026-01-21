@@ -51,6 +51,53 @@ class Remision {
         }
         return false;
     }
+
+    public function registrarMovimientoInventario($id_producto, $cantidad, $id_remision) {
+        // Iniciar transacción
+        $this->conn->beginTransaction();
+
+        try {
+            // 1. Obtener stock actual del producto
+            $query_stock = "SELECT stock_actual FROM productos WHERE id_producto = :id_producto FOR UPDATE";
+            $stmt_stock = $this->conn->prepare($query_stock);
+            $stmt_stock->bindParam(':id_producto', $id_producto);
+            $stmt_stock->execute();
+            $producto = $stmt_stock->fetch(PDO::FETCH_ASSOC);
+
+            if (!$producto) {
+                throw new Exception("Producto no encontrado.");
+            }
+
+            $stock_anterior = $producto['stock_actual'];
+            $stock_nuevo = $stock_anterior - $cantidad;
+
+            // 2. Actualizar el stock del producto
+            $query_update = "UPDATE productos SET stock_actual = :stock_nuevo WHERE id_producto = :id_producto";
+            $stmt_update = $this->conn->prepare($query_update);
+            $stmt_update->bindParam(':stock_nuevo', $stock_nuevo);
+            $stmt_update->bindParam(':id_producto', $id_producto);
+            $stmt_update->execute();
+
+            // 3. Registrar en la tabla de movimientos
+            $query_mov = "INSERT INTO movimientos_inventario (id_producto, tipo_movimiento, cantidad, id_remision, fecha_movimiento) VALUES (:id_producto, 'salida', :cantidad, :id_remision, NOW())";
+            $stmt_mov = $this->conn->prepare($query_mov);
+            $stmt_mov->bindParam(':id_producto', $id_producto);
+            $stmt_mov->bindParam(':cantidad', $cantidad);
+            $stmt_mov->bindParam(':id_remision', $id_remision);
+            $stmt_mov->execute();
+
+            // Confirmar transacción
+            $this->conn->commit();
+            return true;
+
+        } catch (Exception $e) {
+            // Revertir transacción en caso de error
+            $this->conn->rollBack();
+            // Opcional: registrar el error o lanzarlo de nuevo
+            error_log("Error al registrar movimiento de inventario: " . $e->getMessage());
+            return false;
+        }
+    }
     
     public function lastInsertId(){
         return $this->id_remision;
